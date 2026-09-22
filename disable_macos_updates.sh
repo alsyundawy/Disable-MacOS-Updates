@@ -10,7 +10,7 @@ IFS=$'\n\t'
 # Version       : 1.2.0
 # Created Date  : 2026-09-14
 # Last Updated  : 2026-09-22
-# Author        : alsyundawy (༺ Initial H ༻)
+# Author        : Harry Dertin Sutisna Alsyundawy (@alsyundawy)
 # Email         : alsyundawy@gmail.com
 # Website       : https://www.alsyundawy.com
 # GitHub        : https://github.com/alsyundawy
@@ -42,7 +42,7 @@ IFS=$'\n\t'
 #     - Requires macOS (Darwin) and must be run as root (via sudo).
 #     - Idempotent: safe to run multiple times without duplicating entries.
 #     - All host entries and comment blocks are tagged with a unique marker
-#       comment so restore_macos_updates.sh can surgically remove them.
+#       comment so restore_macos_updates.sh can cleanly remove them.
 #     - Pristine /etc/hosts backup: /var/db/disable_macos_updates_hosts.bak
 #     - Daily /etc/hosts backup:   /var/db/disable_macos_updates_hosts.bak.YYYYMMDD
 #     - defaults(1) plist backup:  /var/db/disable_macos_updates_prefs.bak
@@ -56,7 +56,7 @@ IFS=$'\n\t'
 #     - Restrictive permissions (0600 root:wheel) on all backups in /var/db.
 #     - Safe process substitution avoiding pipeline pipefail traps.
 #
-# Minimum macOS:  12 Monterey (tested); compatible with 10.15+ through 15+ (Sequoia) & 16+ (Tahoe)
+# Minimum macOS:  12 Monterey (tested); compatible with 10.15+ through 15+ (Sequoia), 26+ (Tahoe), and 27+ (Golden Gate)
 # Bash version:   3.2.57+ (native macOS)
 #
 # ==============================================================================
@@ -103,7 +103,7 @@ IFS=$'\n\t'
 #     Organization (WWW.ALSYUNDAWY.NET), and Location (DKI Jakarta, Indonesia).
 # 12. Multi-OS Compatibility Invariant (v1.2.0):
 #     Validated across macOS Monterey (12), Ventura (13), Sonoma (14),
-#     Sequoia (15), and Tahoe (16) on both Apple Silicon (M1–M4) and Intel (x86_64).
+#     Sequoia (15), Tahoe (26), and Golden Gate (27) on Apple Silicon (M1–M6: Base, Pro, Max, Ultra) and Intel (x86_64 where supported).
 #
 # ==============================================================================
 # CHANGELOG
@@ -141,7 +141,7 @@ IFS=$'\n\t'
 readonly SCRIPT_VERSION="1.2.0"
 readonly SCRIPT_NAME="disable_macos_updates"
 
-# Unique tag injected into /etc/hosts so restore can surgically remove entries
+# Unique tag injected into /etc/hosts so restore can cleanly remove entries
 readonly HOSTS_TAG="# ${SCRIPT_NAME}:managed"
 
 # Backup paths (root-only /var/db — persistent across reboots)
@@ -150,23 +150,23 @@ readonly PREFS_BACKUP="/var/db/${SCRIPT_NAME}_prefs.bak"
 
 # Apple update CDN domains to sinkhole
 readonly -a UPDATE_DOMAINS=(
-    "swscan.apple.com"
-    "swdownload.apple.com"
-    "swcdn.apple.com"
-    "updates-http.cdn-apple.com"
-    "updates.cdn-apple.com"
-    "xp.apple.com"
-    "gdmf.apple.com"
+	"swscan.apple.com"
+	"swdownload.apple.com"
+	"swcdn.apple.com"
+	"updates-http.cdn-apple.com"
+	"updates.cdn-apple.com"
+	"xp.apple.com"
+	"gdmf.apple.com"
 )
 
 # macOS SoftwareUpdate launch daemons to unload
 readonly -a UPDATE_DAEMONS=(
-    "com.apple.softwareupdated"
-    "com.apple.mobile.softwareupdated"
-    "com.apple.InstallAssistantService"
-    "com.apple.storedownloadd"
-    "com.apple.storekitagentd"
-    "com.apple.commerce"
+	"com.apple.softwareupdated"
+	"com.apple.mobile.softwareupdated"
+	"com.apple.InstallAssistantService"
+	"com.apple.storedownloadd"
+	"com.apple.storekitagentd"
+	"com.apple.commerce"
 )
 
 TMP_HOSTS=""
@@ -175,34 +175,45 @@ TMP_HOSTS=""
 # TERMINAL COLORS (NO_COLOR convention)
 # ==============================================================================
 
-if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
-    C_RESET=$'\033[0m'; C_BOLD=$'\033[1m'
-    C_RED=$'\033[1;31m';    C_YELLOW=$'\033[1;33m'
-    C_GREEN=$'\033[1;32m';  C_CYAN=$'\033[1;36m'
-    C_MAGENTA=$'\033[1;35m'
+if [[ -t 1 && -z ${NO_COLOR:-} ]]; then
+	C_RESET=$'\033[0m'
+	C_BOLD=$'\033[1m'
+	C_RED=$'\033[1;31m'
+	C_YELLOW=$'\033[1;33m'
+	C_GREEN=$'\033[1;32m'
+	C_CYAN=$'\033[1;36m'
+	C_MAGENTA=$'\033[1;35m'
 else
-    C_RESET=""; C_BOLD=""; C_RED=""; C_YELLOW=""
-    C_GREEN=""; C_CYAN=""; C_MAGENTA=""
+	C_RESET=""
+	C_BOLD=""
+	C_RED=""
+	C_YELLOW=""
+	C_GREEN=""
+	C_CYAN=""
+	C_MAGENTA=""
 fi
 
 # ==============================================================================
 # LOGGING
 # ==============================================================================
 
-die()  { printf "\n%s %s\n\n" "${C_RED}${C_BOLD}✖ ERROR:${C_RESET}"  "${C_RED}$*${C_RESET}"  >&2; exit 1; }
-info() { printf "%s %s\n"     "${C_CYAN}${C_BOLD}ℹ${C_RESET}"        "$*"; }
-ok()   { printf "%s %s\n"     "${C_GREEN}${C_BOLD}✔${C_RESET}"       "${C_GREEN}$*${C_RESET}"; }
-warn() { printf "%s %s\n"     "${C_YELLOW}${C_BOLD}⚠${C_RESET}"      "${C_YELLOW}$*${C_RESET}" >&2; }
-step() { printf "\n%s %s\n"   "${C_MAGENTA}${C_BOLD}▶ STEP${C_RESET}" "${C_BOLD}$*${C_RESET}"; }
+die() {
+	printf "\n%s %s\n\n" "${C_RED}${C_BOLD}✖ ERROR:${C_RESET}" "${C_RED}$*${C_RESET}" >&2
+	exit 1
+}
+info() { printf "%s %s\n" "${C_CYAN}${C_BOLD}ℹ${C_RESET}" "$*"; }
+ok() { printf "%s %s\n" "${C_GREEN}${C_BOLD}✔${C_RESET}" "${C_GREEN}$*${C_RESET}"; }
+warn() { printf "%s %s\n" "${C_YELLOW}${C_BOLD}⚠${C_RESET}" "${C_YELLOW}$*${C_RESET}" >&2; }
+step() { printf "\n%s %s\n" "${C_MAGENTA}${C_BOLD}▶ STEP${C_RESET}" "${C_BOLD}$*${C_RESET}"; }
 
 # ==============================================================================
 # CLEANUP
 # ==============================================================================
 
 cleanup() {
-    if [[ -n "${TMP_HOSTS}" && -f "${TMP_HOSTS}" ]]; then
-        rm -f -- "${TMP_HOSTS}"
-    fi
+	if [[ -n ${TMP_HOSTS} && -f ${TMP_HOSTS} ]]; then
+		rm -f -- "${TMP_HOSTS}"
+	fi
 }
 
 trap cleanup EXIT
@@ -215,15 +226,15 @@ trap 'exit 143' TERM
 # PREFLIGHT CHECKS
 # ==============================================================================
 
-[[ "$(uname -s)" == "Darwin" ]] || die "This script is for macOS only."
-[[ "${EUID}" -eq 0 ]]           || die "Must be run as root. Use: sudo $0"
+[[ "$(uname -s || true)" == "Darwin" ]] || die "This script is for macOS only."
+[[ ${EUID} -eq 0 ]] || die "Must be run as root. Use: sudo $0"
 
 # Require bash 3.2+
-(( BASH_VERSINFO[0] >= 3 )) || die "Bash 3.2+ is required."
+((BASH_VERSINFO[0] >= 3)) || die "Bash 3.2+ is required."
 
 # Require commands
 for _c in awk chmod cp defaults dscacheutil find grep killall launchctl mktemp mv rm sw_vers; do
-    command -v "${_c}" >/dev/null 2>&1 || die "Required command not found: ${_c}"
+	command -v "${_c}" >/dev/null 2>&1 || die "Required command not found: ${_c}"
 done
 unset _c
 
@@ -240,7 +251,7 @@ printf "\n"
 
 macOS_ver="$(sw_vers -productVersion 2>/dev/null || echo "unknown")"
 info "macOS version  : ${C_BOLD}${macOS_ver}${C_RESET}"
-info "Timestamp      : ${C_BOLD}$(date '+%Y-%m-%d %H:%M:%S %Z')${C_RESET}"
+info "Timestamp      : ${C_BOLD}$(date '+%Y-%m-%d %H:%M:%S %Z' || true)${C_RESET}"
 info "Hosts backup   : ${C_BOLD}${HOSTS_BACKUP}${C_RESET}"
 info "Prefs backup   : ${C_BOLD}${PREFS_BACKUP}${C_RESET}"
 
@@ -250,29 +261,29 @@ info "Prefs backup   : ${C_BOLD}${PREFS_BACKUP}${C_RESET}"
 
 step "1/6  Backing up current SoftwareUpdate preferences..."
 
-if [[ ! -f "${PREFS_BACKUP}" ]]; then
-    {
-        echo "# disable_macos_updates.sh preferences backup"
-        echo "# Timestamp: $(date '+%Y-%m-%d %H:%M:%S %Z')"
-        echo "# macOS: ${macOS_ver}"
-        echo ""
-        echo "[com.apple.SoftwareUpdate]"
-        for _key in AutomaticCheckEnabled AutomaticDownload AutomaticallyInstallMacOSUpdates \
-                    ConfigDataInstall CriticalUpdateInstall; do
-            _val="$(defaults read /Library/Preferences/com.apple.SoftwareUpdate "${_key}" 2>/dev/null || echo "NOT_SET")"
-            echo "  ${_key} = ${_val}"
-        done
-        echo ""
-        echo "[com.apple.commerce]"
-        _val="$(defaults read /Library/Preferences/com.apple.commerce AutoUpdate 2>/dev/null || \
-                defaults read /Library/Preferences/com.apple.Commerce AutoUpdate 2>/dev/null || echo "NOT_SET")"
-        echo "  AutoUpdate = ${_val}"
-    } > "${PREFS_BACKUP}"
-    chmod 600 "${PREFS_BACKUP}"
-    chown root:wheel "${PREFS_BACKUP}" 2>/dev/null || true
-    ok "Preferences backup written to: ${PREFS_BACKUP}"
+if [[ ! -f ${PREFS_BACKUP} ]]; then
+	{
+		echo "# disable_macos_updates.sh preferences backup"
+		echo "# Timestamp: $(date '+%Y-%m-%d %H:%M:%S %Z' || true)"
+		echo "# macOS: ${macOS_ver}"
+		echo ""
+		echo "[com.apple.SoftwareUpdate]"
+		for _key in AutomaticCheckEnabled AutomaticDownload AutomaticallyInstallMacOSUpdates \
+			ConfigDataInstall CriticalUpdateInstall; do
+			_val="$(defaults read /Library/Preferences/com.apple.SoftwareUpdate "${_key}" 2>/dev/null || echo "NOT_SET")"
+			echo "  ${_key} = ${_val}"
+		done
+		echo ""
+		echo "[com.apple.commerce]"
+		_val="$(defaults read /Library/Preferences/com.apple.commerce AutoUpdate 2>/dev/null ||
+			defaults read /Library/Preferences/com.apple.Commerce AutoUpdate 2>/dev/null || echo "NOT_SET")"
+		echo "  AutoUpdate = ${_val}"
+	} >"${PREFS_BACKUP}"
+	chmod 600 "${PREFS_BACKUP}"
+	chown root:wheel "${PREFS_BACKUP}" 2>/dev/null || true
+	ok "Preferences backup written to: ${PREFS_BACKUP}"
 else
-    info "Preferences backup already exists at: ${PREFS_BACKUP} (preserving original baseline)"
+	info "Preferences backup already exists at: ${PREFS_BACKUP} (preserving original baseline)"
 fi
 
 # ==============================================================================
@@ -284,16 +295,16 @@ step "2/6  Disabling SoftwareUpdate automatic check / download / install..."
 _sw="/Library/Preferences/com.apple.SoftwareUpdate"
 _commerce="/Library/Preferences/com.apple.commerce"
 
-defaults write "${_sw}" AutomaticCheckEnabled            -bool false
-defaults write "${_sw}" AutomaticDownload                -bool false
-defaults write "${_sw}" AutomaticallyInstallMacOSUpdates   -bool false
-defaults write "${_sw}" ConfigDataInstall                -bool false
-defaults write "${_sw}" CriticalUpdateInstall            -bool false
-defaults write "${_commerce}" AutoUpdate                 -bool false
+defaults write "${_sw}" AutomaticCheckEnabled -bool false
+defaults write "${_sw}" AutomaticDownload -bool false
+defaults write "${_sw}" AutomaticallyInstallMacOSUpdates -bool false
+defaults write "${_sw}" ConfigDataInstall -bool false
+defaults write "${_sw}" CriticalUpdateInstall -bool false
+defaults write "${_commerce}" AutoUpdate -bool false
 
 # Ensure case-variant plist synchronization if present
 if [[ -f "/Library/Preferences/com.apple.Commerce.plist" ]]; then
-    defaults write "/Library/Preferences/com.apple.Commerce" AutoUpdate -bool false
+	defaults write "/Library/Preferences/com.apple.Commerce" AutoUpdate -bool false
 fi
 
 ok "SoftwareUpdate automatic flags disabled."
@@ -305,39 +316,39 @@ ok "SoftwareUpdate automatic flags disabled."
 step "3/6  Unloading SoftwareUpdate launch daemons..."
 
 for _daemon in "${UPDATE_DAEMONS[@]}"; do
-    _unloaded=false
+	_unloaded=false
 
-    # 1. Target modern service target (macOS 11+)
-    if launchctl bootout "system/${_daemon}" 2>/dev/null; then
-        ok "  Unloaded: ${_daemon} (service target)"
-        _unloaded=true
-    fi
+	# 1. Target modern service target (macOS 11+)
+	if launchctl bootout "system/${_daemon}" 2>/dev/null; then
+		ok "  Unloaded: ${_daemon} (service target)"
+		_unloaded=true
+	fi
 
-    # 2. Target system daemon plist
-    if [[ "${_unloaded}" == false && -f "/System/Library/LaunchDaemons/${_daemon}.plist" ]]; then
-        if launchctl bootout system "/System/Library/LaunchDaemons/${_daemon}.plist" 2>/dev/null; then
-            ok "  Unloaded: ${_daemon} (system daemon plist)"
-            _unloaded=true
-        fi
-    fi
+	# 2. Target system daemon plist
+	if [[ ${_unloaded} == false && -f "/System/Library/LaunchDaemons/${_daemon}.plist" ]]; then
+		if launchctl bootout system "/System/Library/LaunchDaemons/${_daemon}.plist" 2>/dev/null; then
+			ok "  Unloaded: ${_daemon} (system daemon plist)"
+			_unloaded=true
+		fi
+	fi
 
-    # 3. Target local daemon plist
-    if [[ "${_unloaded}" == false && -f "/Library/LaunchDaemons/${_daemon}.plist" ]]; then
-        if launchctl bootout system "/Library/LaunchDaemons/${_daemon}.plist" 2>/dev/null; then
-            ok "  Unloaded: ${_daemon} (library daemon plist)"
-            _unloaded=true
-        fi
-    fi
+	# 3. Target local daemon plist
+	if [[ ${_unloaded} == false && -f "/Library/LaunchDaemons/${_daemon}.plist" ]]; then
+		if launchctl bootout system "/Library/LaunchDaemons/${_daemon}.plist" 2>/dev/null; then
+			ok "  Unloaded: ${_daemon} (library daemon plist)"
+			_unloaded=true
+		fi
+	fi
 
-    # 4. Fallback legacy label
-    if [[ "${_unloaded}" == false ]] && launchctl bootout system "${_daemon}" 2>/dev/null; then
-        ok "  Unloaded: ${_daemon} (legacy label)"
-        _unloaded=true
-    fi
+	# 4. Fallback legacy label
+	if [[ ${_unloaded} == false ]] && launchctl bootout system "${_daemon}" 2>/dev/null; then
+		ok "  Unloaded: ${_daemon} (legacy label)"
+		_unloaded=true
+	fi
 
-    if [[ "${_unloaded}" == false ]]; then
-        warn "  Not loaded (or already disabled/protected): ${_daemon}"
-    fi
+	if [[ ${_unloaded} == false ]]; then
+		warn "  Not loaded (or already disabled/protected): ${_daemon}"
+	fi
 done
 
 ok "Launch daemon step complete."
@@ -349,14 +360,14 @@ ok "Launch daemon step complete."
 step "4/6  Clearing /Library/Updates cache..."
 
 if [[ -d /Library/Updates ]]; then
-    # Find and remove only files/dirs under /Library/Updates (not the dir itself)
-    if find /Library/Updates -mindepth 1 -delete 2>/dev/null; then
-        ok "/Library/Updates cache cleared."
-    else
-        warn "Could not fully clear /Library/Updates (some files may be in use)."
-    fi
+	# Find and remove only files/dirs under /Library/Updates (not the dir itself)
+	if find /Library/Updates -mindepth 1 -delete 2>/dev/null; then
+		ok "/Library/Updates cache cleared."
+	else
+		warn "Could not fully clear /Library/Updates (some files may be in use)."
+	fi
 else
-    info "/Library/Updates does not exist — skipping."
+	info "/Library/Updates does not exist — skipping."
 fi
 
 # ==============================================================================
@@ -366,35 +377,35 @@ fi
 step "5/6  Adding Apple update CDN domains to /etc/hosts sinkhole..."
 
 # 1. Backup pristine baseline /etc/hosts once (before any sinkholes exist)
-if [[ ! -f "${HOSTS_BACKUP}" ]]; then
-    if grep -q "${HOSTS_TAG}" /etc/hosts 2>/dev/null; then
-        # Use temp file + atomic mv to prevent partial/empty HOSTS_BACKUP on read error
-        _tmp_pristine="$(mktemp "${TMPDIR:-/tmp}/hosts_pristine.XXXXXXXX")"
-        grep -v "${HOSTS_TAG}" /etc/hosts > "${_tmp_pristine}" || {
-            rm -f -- "${_tmp_pristine}"
-            die "Failed to build pristine /etc/hosts content for backup."
-        }
-        mv -f -- "${_tmp_pristine}" "${HOSTS_BACKUP}"
-    else
-        cp -p -- /etc/hosts "${HOSTS_BACKUP}"
-    fi
-    chmod 600 "${HOSTS_BACKUP}"
-    chown root:wheel "${HOSTS_BACKUP}" 2>/dev/null || true
-    ok "  Baseline pristine /etc/hosts backup written to: ${HOSTS_BACKUP}"
+if [[ ! -f ${HOSTS_BACKUP} ]]; then
+	if grep -q "${HOSTS_TAG}" /etc/hosts 2>/dev/null; then
+		# Use temp file + atomic mv to prevent partial/empty HOSTS_BACKUP on read error
+		_tmp_pristine="$(mktemp "${TMPDIR:-/tmp}/hosts_pristine.XXXXXXXX")"
+		grep -v "${HOSTS_TAG}" /etc/hosts >"${_tmp_pristine}" || {
+			rm -f -- "${_tmp_pristine}"
+			die "Failed to build pristine /etc/hosts content for backup."
+		}
+		mv -f -- "${_tmp_pristine}" "${HOSTS_BACKUP}"
+	else
+		cp -p -- /etc/hosts "${HOSTS_BACKUP}"
+	fi
+	chmod 600 "${HOSTS_BACKUP}"
+	chown root:wheel "${HOSTS_BACKUP}" 2>/dev/null || true
+	ok "  Baseline pristine /etc/hosts backup written to: ${HOSTS_BACKUP}"
 else
-    info "  Baseline /etc/hosts backup already exists: ${HOSTS_BACKUP}"
+	info "  Baseline /etc/hosts backup already exists: ${HOSTS_BACKUP}"
 fi
 
 # 2. Daily timestamped backup (idempotent: skip if backup already exists from today)
 _today="$(date '+%Y%m%d')"
 _dated_backup="${HOSTS_BACKUP}.${_today}"
-if [[ ! -f "${_dated_backup}" ]]; then
-    cp -p -- /etc/hosts "${_dated_backup}"
-    chmod 600 "${_dated_backup}"
-    chown root:wheel "${_dated_backup}" 2>/dev/null || true
-    ok "  Daily /etc/hosts backup written to: ${_dated_backup}"
+if [[ ! -f ${_dated_backup} ]]; then
+	cp -p -- /etc/hosts "${_dated_backup}"
+	chmod 600 "${_dated_backup}"
+	chown root:wheel "${_dated_backup}" 2>/dev/null || true
+	ok "  Daily /etc/hosts backup written to: ${_dated_backup}"
 else
-    info "  Daily /etc/hosts backup already exists for today: ${_dated_backup}"
+	info "  Daily /etc/hosts backup already exists for today: ${_dated_backup}"
 fi
 
 # Build new /etc/hosts atomically via temp file
@@ -417,20 +428,20 @@ awk -v tag="${HOSTS_TAG}" '
     /^[[:space:]]*$/ { blank++; next }
     { for(i=0; i<blank; i++) print ""; blank=0; print }
     END { if (NR > 0) printf "" }
-' > "${TMP_HOSTS}"
+' >"${TMP_HOSTS}"
 
-# Append sinkhole header + managed entries (all tagged with HOSTS_TAG for surgical removal)
+# Append sinkhole header + managed entries (all tagged with HOSTS_TAG for clean removal)
 {
-    printf "\n"
-    printf "# ============================================================ %s\n" "${HOSTS_TAG}"
-    printf "# Apple Update CDN Sinkhole — added by %s v%s %s\n" "${SCRIPT_NAME}" "${SCRIPT_VERSION}" "${HOSTS_TAG}"
-    printf "# Timestamp: %s %s\n" "$(date '+%Y-%m-%d %H:%M:%S %Z')" "${HOSTS_TAG}"
-    printf "# Remove with: sudo ./restore_macos_updates.sh %s\n" "${HOSTS_TAG}"
-    printf "# ============================================================ %s\n" "${HOSTS_TAG}"
-    for _domain in "${UPDATE_DOMAINS[@]}"; do
-        printf "127.0.0.1  %-40s %s\n" "${_domain}" "${HOSTS_TAG}"
-    done
-} >> "${TMP_HOSTS}"
+	printf "\n"
+	printf "# ============================================================ %s\n" "${HOSTS_TAG}"
+	printf "# Apple Update CDN Sinkhole — added by %s v%s %s\n" "${SCRIPT_NAME}" "${SCRIPT_VERSION}" "${HOSTS_TAG}"
+	printf "# Timestamp: %s %s\n" "$(date '+%Y-%m-%d %H:%M:%S %Z' || true)" "${HOSTS_TAG}"
+	printf "# Remove with: sudo ./restore_macos_updates.sh %s\n" "${HOSTS_TAG}"
+	printf "# ============================================================ %s\n" "${HOSTS_TAG}"
+	for _domain in "${UPDATE_DOMAINS[@]}"; do
+		printf "127.0.0.1  %-40s %s\n" "${_domain}" "${HOSTS_TAG}"
+	done
+} >>"${TMP_HOSTS}"
 
 # Ensure permissions before atomic move
 chmod 644 "${TMP_HOSTS}"
@@ -439,10 +450,10 @@ chown root:wheel "${TMP_HOSTS}" 2>/dev/null || true
 # Atomic move (same filesystem → rename(2))
 mv -f -- "${TMP_HOSTS}" /etc/hosts
 chmod 644 /etc/hosts
-TMP_HOSTS=""   # already moved; cleanup trap no longer needs it
+TMP_HOSTS="" # already moved; cleanup trap no longer needs it
 
 for _domain in "${UPDATE_DOMAINS[@]}"; do
-    ok "  Sinkholes: ${_domain} → 127.0.0.1"
+	ok "  Sinkholes: ${_domain} → 127.0.0.1"
 done
 
 # ==============================================================================
@@ -468,22 +479,22 @@ printf "%s\n" "${C_GREEN}${C_BOLD}═══════════════�
 printf "\n"
 info "Current SoftwareUpdate settings:"
 for _key in AutomaticCheckEnabled AutomaticDownload AutomaticallyInstallMacOSUpdates ConfigDataInstall CriticalUpdateInstall; do
-    _val="$(defaults read /Library/Preferences/com.apple.SoftwareUpdate "${_key}" 2>/dev/null || echo "NOT_SET")"
-    printf "    %-46s = %s\n" "${_key}" "${C_BOLD}${_val}${C_RESET}"
+	_val="$(defaults read /Library/Preferences/com.apple.SoftwareUpdate "${_key}" 2>/dev/null || echo "NOT_SET")"
+	printf "    %-46s = %s\n" "${_key}" "${C_BOLD}${_val}${C_RESET}"
 done
 
-_commerce_val="$(defaults read /Library/Preferences/com.apple.commerce AutoUpdate 2>/dev/null || \
-                 defaults read /Library/Preferences/com.apple.Commerce AutoUpdate 2>/dev/null || echo "NOT_SET")"
+_commerce_val="$(defaults read /Library/Preferences/com.apple.commerce AutoUpdate 2>/dev/null ||
+	defaults read /Library/Preferences/com.apple.Commerce AutoUpdate 2>/dev/null || echo "NOT_SET")"
 printf "    %-46s = %s\n" "App Store AutoUpdate (com.apple.commerce)" "${C_BOLD}${_commerce_val}${C_RESET}"
 
 printf "\n"
 info "/etc/hosts sinkhole entries:"
 while IFS= read -r _line; do
-    [[ -z "${_line}" ]] && continue
-    _entry="${_line%%#*}"
-    if [[ -n "${_entry// /}" ]]; then
-        printf "    %s\n" "${_entry}"
-    fi
+	[[ -z ${_line} ]] && continue
+	_entry="${_line%%#*}"
+	if [[ -n ${_entry// /} ]]; then
+		printf "    %s\n" "${_entry}"
+	fi
 done < <(grep "${HOSTS_TAG}" /etc/hosts 2>/dev/null || true)
 
 printf "\n"

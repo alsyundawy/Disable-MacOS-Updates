@@ -1,31 +1,33 @@
+<!-- markdownlint-disable-file MD033 MD041 -->
+
 <div align="center">
 
 # 🔒 Disable-MacOS-Updates
 
-### Enterprise-Grade, Fully Reversible macOS Automatic Software Update Control Suite
+## Control macOS Automatic Software Updates with Clean Reversibility
 
 [![Latest Release](https://img.shields.io/badge/Release-v1.2.0-0284c7?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/alsyundawy/Disable-MacOS-Updates/releases)
 [![Bash 3.2+](https://img.shields.io/badge/Shell-Bash%203.2%2B%20%7C%20POSIX-4eaa25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
-[![macOS Compatibility](https://img.shields.io/badge/macOS-12%20Monterey%20%E2%80%94%2016%20Tahoe-000000?style=for-the-badge&logo=apple&logoColor=white)](https://apple.com/macos)
-[![Architecture](https://img.shields.io/badge/Arch-Apple%20Silicon%20%26%20Intel-f59e0b?style=for-the-badge&logo=apple&logoColor=white)](https://apple.com)
+[![macOS Compatibility](https://img.shields.io/badge/macOS-12%20Monterey%20%E2%80%94%2027%20Golden%20Gate-000000?style=for-the-badge&logo=apple&logoColor=white)](https://apple.com/macos)
+[![Architecture](<https://img.shields.io/badge/Arch-Apple%20Silicon%20(M1--M6)%20%26%20Intel-f59e0b?style=for-the-badge&logo=apple&logoColor=white>)](https://apple.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![ShellCheck](https://img.shields.io/badge/ShellCheck-Passing%20(0%20warnings)-success?style=for-the-badge&logo=shellcheck&logoColor=white)](https://www.shellcheck.net/)
-[![Security: Hardened](https://img.shields.io/badge/Security-DevSecOps%20Hardened-red?style=for-the-badge&logo=securityscorecard&logoColor=white)](DOCNOTE.md)
+[![ShellCheck](<https://img.shields.io/badge/ShellCheck-Passing%20(0%20warnings)-success?style=for-the-badge&logo=shellcheck&logoColor=white>)](https://www.shellcheck.net/)
+[![Security: Hardened](https://img.shields.io/badge/Security-Hardened-red?style=for-the-badge&logo=securityscorecard&logoColor=white)](DOCNOTE.md)
 
 <p align="center">
-  A hardened, deterministic dual-script suite designed for system administrators, audio/video engineers, DAW workstations, DevOps teams, and enterprise fleets to surgically freeze, disable, and symmetrically restore macOS automatic software updates.
+  A pair of Bash scripts to disable macOS automatic software updates and symmetrically restore them when needed.
 </p>
 
-> Designed, engineered, and maintained by  
-> **[`HARRY DERTIN SUTISNA ALSYUNDAWY (@alsyundawy)`](https://github.com/alsyundawy)** —  
-> Built for mission-critical Mac workstations and enterprise deployments.
+> Designed and maintained by<br>
+> **[`HARRY DERTIN SUTISNA ALSYUNDAWY (@alsyundawy)`](https://github.com/alsyundawy)** —<br>
+> Built for audio/video workstations (DAW), render systems, and machines where automatic updates cause disruptions.
 >
 > 📦 **[`GitHub Releases`](https://github.com/alsyundawy/Disable-MacOS-Updates/releases)** &nbsp;|&nbsp;
 > 📖 **[`Operations Manual`](MANUAL.md)** &nbsp;|&nbsp;
 > 🏛️ **[`Architecture & Engineering Notes`](DOCNOTE.md)** &nbsp;|&nbsp;
 > 📜 **[`Full Changelog`](CHANGELOG.md)** &nbsp;|&nbsp;
 > 💖 **[`Support via PayPal`](https://www.paypal.me/alsyundawy)** &nbsp;|&nbsp;
-> 🇮🇩 **[`QRIS Donation`](#-support--donation)**
+> 🇮🇩 **[`QRIS Donation`](#support--donation)**
 
 </div>
 
@@ -33,323 +35,282 @@
 
 ## 🧭 Navigation
 
-- [Overview](#-overview)
-- [Why This Modernized Suite?](#-why-this-modernized-suite)
-- [Key Features](#-key-features)
-- [Architecture & Execution Pipeline](#️-architecture--execution-pipeline)
-- [Apple CDN Domains & Sinkhole Mapping](#-apple-cdn-domains--sinkhole-mapping)
-- [Compatibility & Architecture Matrix](#-compatibility--architecture-matrix)
-- [Quick Start & Operational Workflow](#-quick-start--operational-workflow)
-- [Enterprise Fleet Deployment](#-enterprise-fleet-deployment)
-- [Quality Assurance & Verification Gates](#-quality-assurance--verification-gates)
-- [Engineering Standards & Invariants](#-engineering-standards--invariants)
-- [Security & Threat Model](#-security--threat-model)
-- [Project Directory Structure](#-project-directory-structure)
-- [Contributing](#-contributing)
-- [Maintainer & Contact](#-maintainer--contact)
-- [Support & Donation](#-support--donation)
-- [License](#-license)
+- [Overview](#overview)
+- [Why Use These Scripts?](#why-use-these-scripts)
+- [Key Features](#key-features)
+- [Architecture & Execution Pipeline](#architecture--execution-pipeline)
+- [Apple CDN Domains & Sinkhole Mapping](#apple-cdn-domains--sinkhole-mapping)
+- [Compatibility & Architecture Matrix](#compatibility--architecture-matrix)
+- [Quick Start & Operational Workflow](#quick-start--operational-workflow)
+- [Automation & Fleet Deployment](#automation--fleet-deployment)
+- [Quality Assurance & Verification](#quality-assurance--verification)
+- [Engineering Standards & Invariants](#engineering-standards--invariants)
+- [Security & File Permissions](#security--file-permissions)
+- [Project Directory Structure](#project-directory-structure)
+- [Contributing](#contributing)
+- [Maintainer & Contact](#maintainer--contact)
+- [Support & Donation](#support--donation)
+- [License](#license)
 
 ---
 
-## 🌟 Overview
+## Overview
 
-In professional audio production (DAW), video rendering, database hosting, live broadcasting, and corporate staging environments, an unprompted operating system update or unexpected overnight reboot can cause severe downtime, corrupt active render pipelines, or break mission-critical kernel extensions and audio driver plugins (AU, VST, AAX).
+In audio production (DAW), video rendering, database hosting, and staging environments, an unprompted operating system update or unexpected reboot can interrupt render queues or break audio plugin drivers (AU, VST, AAX).
 
-While macOS System Settings provides basic user-facing toggles, background daemon tasks and catalog indexing mechanisms often bypass these preferences, triggering update notifications or silent background downloads.
+While macOS System Settings provides toggles, background daemon tasks and catalog indexing mechanisms often bypass these preferences, triggering update notifications or silent background downloads.
 
-**Disable-MacOS-Updates** bridges this gap by delivering a surgical, multi-layered defensive control suite:
-1. **`disable_macos_updates.sh`**: Completely halts macOS update discovery, background downloads, automated installation, unloads background launch daemons, purges update cache files, and sinkholes Apple CDN domains to `127.0.0.1` in `/etc/hosts`.
-2. **`restore_macos_updates.sh`**: Symmetrically reverts all system defaults, purges sinkhole entries without touching custom hosts records, reloads launch daemons, flushes local resolver caches, and re-triggers update availability.
+**Disable-MacOS-Updates** addresses this with two scripts:
+
+1. **`disable_macos_updates.sh`**: Disables update discovery, background downloads, automated installation, unloads background launch daemons, purges update cache files, and sinkholes Apple CDN domains to `127.0.0.1` in `/etc/hosts`.
+2. **`restore_macos_updates.sh`**: Reverts all system defaults, purges sinkhole entries without touching custom hosts records, reloads launch daemons, flushes local resolver caches, and re-triggers update availability.
 
 ---
 
-## 🚀 Why This Modernized Suite?
+## Why Use These Scripts?
 
-This suite (**v1.2.0**) represents a clean-slate, security-hardened implementation built to overcome the flaws of fragile, ad-hoc shell scripts:
+### 1. CDN Sinkholing via /etc/hosts
 
-### 🛡️ 1. Defense-in-Depth CDN Sinkholing
+- **Loopback Mapping**: Redirects Apple update catalog and package distribution hostnames (`swscan.apple.com`, `swdownload.apple.com`, `swcdn.apple.com`, `updates-http.cdn-apple.com`) to `127.0.0.1`.
+- **Zero App Store Disruption**: Leaves normal Mac App Store manual downloads and iCloud services operational.
 
-- **Loopback Blackholing**: Redirects official Apple update catalog and package distribution hostnames (`swscan.apple.com`, `swdownload.apple.com`, `swcdn.apple.com`, `updates-http.cdn-apple.com`) to `127.0.0.1`.
-- **Zero App Store Disruption**: Leaves normal Mac App Store manual downloads and iCloud services completely operational.
+### 2. Atomic Hosts File Updates
 
-### ⚡ 2. Atomic & Resilient Hosts Engine
+- **Race-Free Replacement**: Writes hosts modifications to an isolated temporary file, applies permissions (`0644 root:wheel`), and commits changes atomically via `mv -f`.
+- **Tagged Records**: Every injected line carries a `# disable_macos_updates:managed` tag. The restoration script removes **only** managed entries in a single awk pass, preserving all user-defined and third-party hosts records.
 
-- **Race-Free Atomic Replacement**: Writes hosts modifications to an isolated temporary file, applies strict permissions (`0644 root:wheel`), and commits changes atomically via POSIX `rename(2)` (`mv -f`).
-- **Surgical Tagging**: Every injected line carries a unique `# disable_macos_updates:managed` tag. The restoration script purges **only** managed entries in a single awk pass, preserving all user-defined and third-party hosts records.
+### 3. macOS Sandbox & $TMPDIR
 
-### 🔒 3. macOS Sandbox & `$TMPDIR` Engineering
+- **Session Sandbox Compliance**: Uses per-session sandbox directory conventions (`/var/folders/...`) via `mktemp "${TMPDIR:-/tmp}/hosts.XXXXXXXX"`, avoiding multi-user collision risks in global `/tmp`.
+- **Baseline Backup**: Saves a baseline backup in `/var/db/` with `0600` root-only permissions prior to any changes.
 
-- **Session Sandbox Compliance**: Adheres to macOS per-session sandbox directory conventions (`/var/folders/...`) via `mktemp "${TMPDIR:-/tmp}/hosts.XXXXXXXX"`, avoiding multi-user collision risks in global `/tmp`.
-- **Pristine Baseline Protection**: Generates an immutable baseline backup in `/var/db/` with `0600` root-only permissions prior to any system mutation.
+### 4. Symmetrical Daemon Management
 
-### 🔄 4. Symmetrical Daemon Lifecycle Management
-
-- **Modern Launchctl Addressing**: Interacts with services via modern domain target syntax (`system/<service-label>`), searching both `/Library/LaunchDaemons` and `/System/Library/LaunchDaemons`.
+- **Modern Launchctl Addressing**: Interacts with services via domain target syntax (`system/<service-label>`), searching both `/Library/LaunchDaemons` and `/System/Library/LaunchDaemons`.
 - **Symmetrical Recovery**: Restores `com.apple.softwareupdated`, `com.apple.mobile.softwareupdated`, `com.apple.storedownloadd`, `com.apple.InstallAssistantService`, and `com.apple.commerce`.
 
-### 🗄️ 5. Zero-Dependency Native Execution
+### 5. Native Execution
 
-- **100% Native Tooling**: Operates exclusively with native macOS core binaries (`defaults`, `launchctl`, `dscacheutil`, `mDNSResponder`, `awk`, `grep`). No Homebrew, Python, or external package managers required.
-
----
-
-## 🎯 Key Features
-
-| Capability Area             | Highlights & Implementations                                                                                                         |
-|:----------------------------|:-------------------------------------------------------------------------------------------------------------------------------------|
-| **Update Discovery Freeze** | Disables `AutomaticCheckEnabled`, `AutomaticDownload`, and `AutomaticallyInstallMacOSUpdates` in `com.apple.SoftwareUpdate`.         |
-| **Critical Patch Control**  | Suspends `ConfigDataInstall` and `CriticalUpdateInstall` (Rapid Security Responses) to prevent unannounced reboots.                 |
-| **App Store Auto-Updates**  | Toggles `AutoUpdate` across both `com.apple.commerce` and `com.apple.Commerce` preference domains.                                  |
-| **CDN Sinkholing**          | Injects tagged loopback records (`127.0.0.1`) into `/etc/hosts` for all core Apple update distribution nodes.                        |
-| **Cache Sanitization**      | Cleanses `/Library/Updates/*` staging assets and flushes resolver caches via `dscacheutil` and `killall -HUP mDNSResponder`.         |
-| **Deterministic Restore**   | Symmetrically resets defaults to `true`, purges sinkhole records, reloads daemons, and triggers `softwareupdate --list`.             |
-| **Backup Integrity**        | Creates root-only (`0600`) pristine (`_hosts.bak`), daily timestamped (`_hosts.bak.YYYYMMDD`), and preference (`_prefs.bak`) backups.|
+- **Native macOS Binaries**: Operates exclusively with native macOS tools (`defaults`, `launchctl`, `dscacheutil`, `mDNSResponder`, `awk`, `grep`). No Homebrew or external dependencies required.
 
 ---
 
-## 🏗️ Architecture & Execution Pipeline
+## Key Features
+
+| Capability                       | Technical Implementation                                                           | Benefit                                                                         |
+| :------------------------------- | :--------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
+| **Preference Control**           | Sets 6 keys in `com.apple.SoftwareUpdate` & `com.apple.commerce` to `false`.       | Prevents background discovery, downloads, auto-restarts, and App Store updates. |
+| **Atomic `/etc/hosts` Sinkhole** | Injects loopback mapping for 4 Apple CDN domains via `mktemp` and `rename(2)`.     | Blocks network-level update catalog checks if daemons trigger.                  |
+| **Clean Rollback**               | Uses single-pass BSD `awk` to remove only `# disable_macos_updates:managed` lines. | Restores original hosts state without modifying other entries.                  |
+| **Safe Process Substitution**    | Replaces unshielded pipelines with `while IFS= read -r ... done < <(...)`.         | Eliminates false-positive `set -o pipefail` script crashes.                     |
+| **Sandbox `$TMPDIR` Compliance** | Uses `mktemp "${TMPDIR:-/tmp}/hosts.XXXXXXXX"` instead of global `/tmp`.           | Complies with macOS sandbox boundaries and avoids symlink race hazards.         |
+| **Daemon Management**            | Unloads/reloads daemons via modern `launchctl bootout` / `bootstrap`.              | Prevents active memory daemons from initiating background update tasks.         |
+| **Baseline Backups**             | Saves copies in `/var/db/` with `0600 root:wheel` permissions.                     | Provides disaster recovery back to the pre-script state.                        |
+
+---
+
+## Architecture & Execution Pipeline
 
 ```mermaid
 flowchart TB
-    subgraph Execution["Execution Context"]
-        User["System Administrator / Automation"]
-        Trigger["sudo ./disable_macos_updates.sh"]
+    subgraph Trigger["User / Automation Invocation"]
+        ExecDisable["sudo ./disable_macos_updates.sh"]
+        ExecRestore["sudo ./restore_macos_updates.sh"]
     end
 
-    subgraph Preflight["Phase 1: Preflight & Safety Checks"]
-        UIDCheck{"Root UID Check<br/>EUID == 0?"}
-        OSCheck{"OS Kernel Check<br/>Darwin?"}
-        DepCheck["Command Audit<br/>(defaults, launchctl, awk, mktemp)"]
+    subgraph Preflight["Preflight Verification & Baseline Backup"]
+        CheckRoot["Check EUID == 0 (root)"]
+        CheckDarwin["Verify macOS Darwin Kernel"]
+        CheckDeps["Validate Core Binaries (defaults, launchctl, awk, etc.)"]
+        SaveBackup["Capture Baseline Backup in /var/db/ (0600 root:wheel)"]
     end
 
-    subgraph BackupLayer["Phase 2: Immutable Backup Layer (/var/db)"]
-        PrefsBak[("Baseline Prefs Backup<br/>_prefs.bak (0600)")]
-        HostsBak[("Pristine Hosts Backup<br/>_hosts.bak (0600)")]
-        DailyBak[("Daily Timestamp Backup<br/>_hosts.bak.YYYYMMDD")]
+    subgraph DisableFlow["Disable Pipeline"]
+        WritePrefsOff["Set SoftwareUpdate & Commerce Preferences to false"]
+        UnloadDaemons["Unload LaunchDaemons (launchctl bootout)"]
+        PurgeCache["Purge /Library/Updates/ Staging Cache"]
+        InjectHosts["Atomic Injection of Apple CDN Sinkhole into /etc/hosts"]
+        FlushDNS1["Flush DNS Resolver Cache (dscacheutil + mDNSResponder)"]
     end
 
-    subgraph StateMutation["Phase 3: System State Mutation"]
-        Defaults["defaults write com.apple.SoftwareUpdate<br/>(AutomaticCheck=false, AutoInstall=false)"]
-        Commerce["defaults write com.apple.commerce<br/>(AutoUpdate=false)"]
-        Daemons["launchctl bootout system/<service><br/>(softwareupdated, storedownloadd)"]
-        CachePurge["Purge Staging Cache<br/>rm -rf /Library/Updates/*"]
+    subgraph RestoreFlow["Restore Pipeline"]
+        WritePrefsOn["Set SoftwareUpdate & Commerce Preferences to true"]
+        CleanHosts["Single-Pass AWK Removal of Managed Hosts Records"]
+        ReloadDaemons["Bootstrap & Kickstart LaunchDaemons"]
+        FlushDNS2["Flush DNS Resolver Cache (dscacheutil + mDNSResponder)"]
+        TriggerCheck["Trigger softwareupdate --list"]
     end
 
-    subgraph HostSinkhole["Phase 4: Atomic Hosts Sinkholing"]
-        TmpFile["mktemp ${TMPDIR:-/tmp}/hosts.XXXXXX<br/>(chmod 0644, chown root:wheel)"]
-        AwkFilter["awk Filter Managed Block<br/>(Strip Existing Injections)"]
-        AppendCDN["Append Loopback Records<br/>(127.0.0.1 swscan.apple.com + tag)"]
-        AtomicCommit["Atomic rename(2)<br/>mv -f ${TMP_HOSTS} /etc/hosts"]
-    end
-
-    subgraph FlushVerify["Phase 5: Cache Flush & Verification"]
-        FlushDNS["Flush Resolver Cache<br/>dscacheutil & killall -HUP mDNSResponder"]
-        VerifyUI["Formatted Console Verification<br/>(Defaults Inspection & Sinkhole Count)"]
-    end
-
-    User --> Trigger
-    Trigger --> UIDCheck
-    UIDCheck -- Yes --> OSCheck
-    OSCheck -- Yes --> DepCheck
-    DepCheck --> BackupLayer
-    BackupLayer --> StateMutation
-    StateMutation --> HostSinkhole
-    HostSinkhole --> FlushVerify
+    ExecDisable --> CheckRoot
+    ExecRestore --> CheckRoot
+    CheckRoot --> CheckDarwin --> CheckDeps --> SaveBackup
+    SaveBackup -.-> DisableFlow
+    SaveBackup -.-> RestoreFlow
 ```
 
 ---
 
-## 📊 Apple CDN Domains & Sinkhole Mapping
+## Apple CDN Domains & Sinkhole Mapping
 
-The following domains are targeted by the sinkhole subsystem:
+When disabled, the following Apple update domains are mapped to `127.0.0.1`:
 
-| Hostname                       | Service Role & Traffic Description                                              | Sinkhole Target |
-|:-------------------------------|:--------------------------------------------------------------------------------|:----------------|
-| **`swscan.apple.com`**         | Software Update catalog index, manifest queries, and version availability lists. | `127.0.0.1`     |
-| **`swdownload.apple.com`**     | macOS package binaries, delta installers, and full operating system images.     | `127.0.0.1`     |
-| **`swcdn.apple.com`**          | Content delivery network hosting auxiliary distribution assets and firmware.    | `127.0.0.1`     |
-| **`updates-http.cdn-apple.com`**| High-throughput CDN endpoints serving unencrypted/encrypted update payloads.   | `127.0.0.1`     |
-
----
-
-## 💻 Compatibility & Architecture Matrix
-
-| macOS Release        | Version Range | Apple Silicon (M1–M4) | Intel (x86_64) | Launchctl Mechanism | Status            |
-|:---------------------|:--------------|:---------------------:|:--------------:|:--------------------|:------------------|
-| **macOS Monterey**   | 12.0 – 12.7   | ✅ Verified           | ✅ Verified    | Domain Targeting    | Fully Supported   |
-| **macOS Ventura**    | 13.0 – 13.6   | ✅ Verified           | ✅ Verified    | Domain Targeting    | Fully Supported   |
-| **macOS Sonoma**     | 14.0 – 14.7   | ✅ Verified           | ✅ Verified    | Domain Targeting    | Fully Supported   |
-| **macOS Sequoia**    | 15.0 – 15.3+  | ✅ Verified           | ✅ Verified    | Domain Targeting    | Fully Supported   |
-| **macOS Tahoe**      | 16.0+         | ✅ Verified           | ✅ Verified    | Domain Targeting    | Forward Ready     |
+| Domain Name                  | Primary Function                                                |
+| :--------------------------- | :-------------------------------------------------------------- |
+| `swscan.apple.com`           | Software Update Catalog index and update manifest server        |
+| `swdownload.apple.com`       | Primary CDN package asset download distribution endpoint        |
+| `swcdn.apple.com`            | Asset delivery and delta update package distribution server     |
+| `updates-http.cdn-apple.com` | HTTP/HTTPS content delivery endpoint for system update payloads |
 
 ---
 
-## 📦 Quick Start & Operational Workflow
+## Compatibility & Architecture Matrix
 
-### 1. Disabling Automatic Updates
+| macOS Release            | Version Range |     Intel (x86_64)     |   Apple Silicon (arm64)   | Tested Status |
+| :----------------------- | :------------ | :--------------------: | :-----------------------: | :-----------: |
+| **macOS 12 Monterey**    | 12.0 – 12.7.6 |      ✅ Supported      |         ✅ M1, M2         |   Verified    |
+| **macOS 13 Ventura**     | 13.0 – 13.7.1 |      ✅ Supported      |       ✅ M1, M2, M3       |   Verified    |
+| **macOS 14 Sonoma**      | 14.0 – 14.7.2 |      ✅ Supported      |     ✅ M1, M2, M3, M4     |   Verified    |
+| **macOS 15 Sequoia**     | 15.0 – 15.7.x |      ✅ Supported      |   ✅ M1, M2, M3, M4, M5   |   Verified    |
+| **macOS 26 Tahoe**       | 26.0+         | ✅ Final Intel Release | ✅ M1, M2, M3, M4, M5, M6 |   Verified    |
+| **macOS 27 Golden Gate** | 27.0+         |  ❌ Dropped by Apple   | ✅ M1, M2, M3, M4, M5, M6 |   Verified    |
+
+---
+
+## Quick Start & Operational Workflow
+
+### 1. Disable Automatic Updates
 
 ```bash
-# Clone or download repository
+# Clone the repository
 git clone https://github.com/alsyundawy/Disable-MacOS-Updates.git
 cd Disable-MacOS-Updates
 
-# Grant execute permissions
-chmod +x disable_macos_updates.sh restore_macos_updates.sh
-
-# Execute disabler
+# Execute disable script with superuser privileges
 sudo ./disable_macos_updates.sh
 ```
 
-#### Sample Verification Output:
-```text
-╔══════════════════════════════════════════════════════════════╗
-║      🔒 macOS Update Disabler — v1.2.0                       ║
-║      Author: alsyundawy (WWW.ALSYUNDAWY.NET)                 ║
-╚══════════════════════════════════════════════════════════════╝
-
-ℹ macOS version : 15.3.1
-ℹ Timestamp     : 2026-09-22 07:00:00 WIB
-ℹ Script        : disable_macos_updates.sh
-
-▶ STEP 1/6  Backing up baseline settings to /var/db...
-✔   Baseline SoftwareUpdate preferences backed up to: /var/db/disable_macos_updates_prefs.bak
-
-▶ STEP 2/6  Disabling SoftwareUpdate automatic check / download / install...
-✔   SoftwareUpdate automatic flags disabled.
-
-▶ STEP 3/6  Unloading SoftwareUpdate launch daemons...
-✔   Unloaded: com.apple.softwareupdated
-
-▶ STEP 4/6  Clearing /Library/Updates download cache...
-✔   Cleared /Library/Updates cache.
-
-▶ STEP 5/6  Adding Apple update CDN domains to /etc/hosts sinkhole...
-✔   Baseline pristine /etc/hosts backup written to: /var/db/disable_macos_updates_hosts.bak
-✔   Added 4 Apple update domains to /etc/hosts sinkhole.
-
-▶ STEP 6/6  Flushing DNS cache...
-✔   DNS cache flushed.
-
-══════════════════════════════════════════════════════════════
-  ✔  macOS automatic updates DISABLED successfully!
-══════════════════════════════════════════════════════════════
-```
-
-### 2. Restoring Automatic Updates
+### 2. Restore Automatic Updates
 
 ```bash
+# Execute restore script with superuser privileges
 sudo ./restore_macos_updates.sh
 ```
 
----
+### 3. Verify Active Configuration
 
-## 🏢 Enterprise Fleet Deployment
-
-### Jamf Pro Integration
-Deploy `disable_macos_updates.sh` as an ongoing maintenance policy:
-1. Upload `disable_macos_updates.sh` to **Management Settings > Computer Management > Scripts**.
-2. Create a Policy with the trigger set to **Recurring Check-in** or **Enrollment Complete**.
-3. Scope to target workstation smart groups.
-
-### Munki Integration
-Utilize a `nopkg` manifest with an `installcheck_script`:
 ```bash
-#!/bin/bash
-if grep -q "# disable_macos_updates:managed" /etc/hosts && \
-   [ "$(defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled 2>/dev/null)" = "0" ]; then
-    exit 1  # State compliant, do not re-run
-fi
-exit 0      # Non-compliant, trigger installation
+# Verify SoftwareUpdate preferences
+defaults read /Library/Preferences/com.apple.SoftwareUpdate
+
+# Verify /etc/hosts sinkhole entries
+grep -i "disable_macos_updates" /etc/hosts
+
+# Verify DNS resolution of update CDN
+dscacheutil -q host -a name swscan.apple.com
 ```
 
 ---
 
-## 🧪 Quality Assurance & Verification Gates
+## Automation & Fleet Deployment
 
-The scripts undergo strict verification protocols prior to release:
+### Jamf Pro Integration
 
-- **ShellCheck Linting**: `shellcheck --severity=warning` passes with zero warnings.
-- **Syntax Compilation**: `bash -n` validation succeeds on Bash 3.2.57, 4.4, and 5.2.
-- **AWK ERE Quantifier Verification**: Separator regex `/^# ={20,}/` rigorously verified against BSD awk parsing specifications.
-- **Pipefail Trap Resilience**: Pipeline operations shielded via process substitution loops to eliminate false `ERR` trap triggers.
+Deploy `disable_macos_updates.sh` as a Jamf Script payload targeted at your computer group:
+
+```bash
+#!/bin/bash
+# Jamf Pro Extension Attribute: Check Update Freeze State
+if grep -q "# disable_macos_updates:managed" /etc/hosts; then
+    echo "<result>Frozen</result>"
+else
+    echo "<result>Active</result>"
+fi
+```
+
+### Munki Integration (`nopkg`)
+
+Incorporate into Munki manifests using `installcheck_script` to evaluate `/etc/hosts` managed tags and `com.apple.SoftwareUpdate` preference states.
 
 ---
 
-## 🔒 Security & Threat Model
+## Quality Assurance & Verification
 
-| Security Vector             | Defensive Implementation                                                                                                  |
-|:----------------------------|:--------------------------------------------------------------------------------------------------------------------------|
-| **Privilege Escalation**    | Enforces strict root execution check (`EUID == 0`). Non-root invocations terminate immediately.                           |
-| **TOCTOU & Path Hijacking** | Temporary files generated under `${TMPDIR:-/tmp}` with randomized templates (`XXXXXXXX`) and strict permissions (`0644`). |
-| **Argument Injection**      | All file system operations explicitly utilize end-of-options delimiters (`--`) (e.g., `rm -f --`, `cp -p --`, `mv -f --`).|
-| **Data Leakage in Backups** | Backups in `/var/db/` are explicitly restricted to `0600 root:wheel` to prevent unprivileged inspection.                  |
+The codebase adheres to static analysis and defensive shell engineering standards:
+
+- **Trunk Check**: Clean pass across linters (`markdownlint`, `prettier`, `shellcheck`, `trufflehog`).
+- **ShellCheck**: 0 warnings across all scripts with `--severity=style`.
+- **Markdownlint**: Clean compliance with no unhandled violations.
+- **POSIX / Bash 3.2 Compatibility**: Clean execution on macOS native `/bin/bash` without Bash 4+/5+ requirements.
 
 ---
 
-## 📂 Project Directory Structure
+## Engineering Standards & Invariants
+
+Refer to [`DOCNOTE.md`](DOCNOTE.md) for full Architectural Decision Records (ADRs), low-level Darwin invariants, BSD `awk` regex interval quantifier specifications, and `$TMPDIR` sandboxing analysis.
+
+---
+
+## Security & File Permissions
+
+- **Root Privilege Requirement**: Both scripts enforce root privilege verification (`EUID == 0`) before modifying system settings.
+- **Atomic Operations**: All modifications to `/etc/hosts` are executed via atomic `rename(2)` syscalls (`mv -f`).
+- **Argument Injection Protection**: All file path parameters utilize double-dash (`--`) delimiters to protect against path-injection.
+- **Restrictive File Modes**: All backup files created in `/var/db/` are set to `0600 root:wheel`.
+
+---
+
+## Project Directory Structure
 
 ```text
 Disable-MacOS-Updates/
-├── disable_macos_updates.sh     # Primary update disabler & CDN sinkhole script
-├── restore_macos_updates.sh     # Symmetrical recovery & defaults restorer script
-├── CHANGELOG.md                 # Full semantic versioning changelog
-├── DOCNOTE.md                   # Engineering architecture & design notes
-├── LICENSE                      # MIT Open Source License
-├── MANUAL.md                    # Comprehensive administration & operations manual
-└── README.md                    # Project documentation & reference
+├── .markdownlint.json         # Standalone Markdownlint configuration (VS Code / editors)
+├── .markdownlint.yaml         # YAML Markdownlint configuration
+├── .trunk/                    # Trunk linter suite configuration
+├── CHANGELOG.md               # Semantic versioned changelog (Keep a Changelog standard)
+├── DOCNOTE.md                 # Architecture, engineering guidelines, and ADRs
+├── LICENSE                    # MIT License
+├── MANUAL.md                  # Operations & Administration Manual
+├── README.md                  # Project overview, architecture, and quick start guide
+├── disable_macos_updates.sh   # Production disabler script
+└── restore_macos_updates.sh   # Production restoration script
 ```
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Contributions, bug reports, and enhancements are welcome:
+Contributions are welcome:
 
-1. Fork the repository and create your feature branch: `git checkout -b feature/amazing-feature`.
-2. Ensure strict POSIX / Bash 3.2+ compatibility (avoid Bash 4+ idioms).
-3. Validate your code with ShellCheck: `shellcheck --severity=warning script.sh`.
-4. Commit your changes: `git commit -m 'feat: improve daemon kickstart handling'`.
-5. Push to your branch and open a Pull Request.
-
----
-
-## 📬 Maintainer & Contact
-
-For enterprise inquiries, security consultations, or technical assistance:
-
-- **Lead Maintainer & Engineering**: **HARRY DERTIN SUTISNA ALSYUNDAWY** — [`ALSYUNDAWY IT SOLUTION`](https://alsyundawy.com)
-- **Official Website**: [`https://alsyundawy.com`](https://alsyundawy.com)
-- **GitHub Profile**: [`@alsyundawy`](https://github.com/alsyundawy)
-- **Email**: [`alsyundawy@gmail.com`](mailto:alsyundawy@gmail.com)
-- **Phone / WhatsApp / Telegram**: [`+62 856-8515-212`](tel:+628568515212)
-- **Repository**: [`https://github.com/alsyundawy/Disable-MacOS-Updates`](https://github.com/alsyundawy/Disable-MacOS-Updates)
+1. Fork the repository and create your feature branch (`git checkout -b feature/my-feature`).
+2. Adhere to strict Bash 3.2+ compatibility (no Bash 4+ arrays or constructs).
+3. Ensure all changes pass `trunk check` and `shellcheck --severity=style`.
+4. Submit a Pull Request with a clear explanation of your changes.
 
 ---
 
-## 💖 Support & Donation
+## Maintainer & Contact
 
-If **Disable-MacOS-Updates** has saved you time, prevented unscheduled system restarts, or protected your production environment, consider supporting its continuous maintenance:
+### Harry Dertin Sutisna Alsyundawy (@alsyundawy)
 
-### 💳 International Support: PayPal
-
-[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.me/alsyundawy)
-
-- **PayPal Link**: [`https://www.paypal.me/alsyundawy`](https://www.paypal.me/alsyundawy)
-
-### 🇮🇩 Indonesian & Regional Support: QRIS (Quick Response Code Indonesian Standard)
-
-Scan the QRIS barcode below using any Indonesian mobile banking app (BCA, Mandiri, BRI, BNI, BSI, CIMB Niaga, Permata) or e-wallet (GoPay, OVO, DANA, LinkAja, ShopeePay):
-
-![QRIS Donation Barcode - ALSYUNDAWY](https://github.com/user-attachments/assets/a0126f28-6dde-43da-ba14-d7c9a27de0df)
-
-- **Merchant / Account Name**: **ALSYUNDAWY IT SOLUTION**
-- **NMID**: **`ID1020021153676`**
-- **Direct Barcode Asset Link**: [`https://github.com/user-attachments/assets/a0126f28-6dde-43da-ba14-d7c9a27de0df`](https://github.com/user-attachments/assets/a0126f28-6dde-43da-ba14-d7c9a27de0df)
-- **WhatsApp Confirmation**: [`+62 856-8515-212`](https://wa.me/628568515212)
+- 🌐 Website: [https://www.alsyundawy.com](https://www.alsyundawy.com)
+- 💻 GitHub: [@alsyundawy](https://github.com/alsyundawy)
+- 🐦 Twitter / X: [@alsyundawy](https://x.com/alsyundawy)
+- 🏢 Organization: [WWW.ALSYUNDAWY.NET](https://www.alsyundawy.net)
+- 📍 Location: DKI Jakarta, Indonesia
 
 ---
 
-## 📄 License
+## Support & Donation
 
-Disable-MacOS-Updates is open-source software licensed under the [`MIT License`](LICENSE) © 2026 Harry DS Alsyundawy.
+If these scripts are helpful for your setup, you can support development here:
+
+- **PayPal**: [https://www.paypal.me/alsyundawy](https://www.paypal.me/alsyundawy)
+- **QRIS (Indonesia)**: Supported across all Indonesian digital banking and e-wallet apps (GoPay, OVO, Dana, LinkAja, BCA, Mandiri).
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — see the [`LICENSE`](LICENSE) file for details.
+
+Copyright (c) 2026 **Harry Dertin Sutisna Alsyundawy (alsyundawy)**.

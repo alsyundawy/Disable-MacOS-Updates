@@ -1,3 +1,5 @@
+<!-- markdownlint-disable-file MD024 -->
+
 # Changelog
 
 All notable changes to **Disable-MacOS-Updates** will be documented in this file.
@@ -10,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-09-22
 
 ### Fixed
+
 - **macOS Sandbox & `$TMPDIR` Compliance**:
   - `disable_macos_updates.sh` & `restore_macos_updates.sh`: Replaced hardcoded `/tmp/hosts.XXXXXXXX` with `mktemp "${TMPDIR:-/tmp}/hosts.XXXXXXXX"`. This ensures compliance with macOS per-session secure temp directory conventions (`/var/folders/...`), eliminating temp-file race hazards and adhering to macOS sandboxing.
 - **AWK Extended Regular Expression (ERE) Quantifier Bug**:
@@ -19,14 +22,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `disable_macos_updates.sh`: Replaced bare redirect `grep -v "${HOSTS_TAG}" /etc/hosts > "${HOSTS_BACKUP}"` with atomic `mktemp` intermediate file creation and `mv -f` pattern. If a disk write or pipeline error occurred mid-read, the previous implementation could create an empty or truncated baseline backup. The new implementation guarantees atomic write and halts with `die()` on failure.
 - **Backward-Compatible Comment Stripping**:
   - `disable_macos_updates.sh`: Added `/^# added by disable_macos_updates/ { next }` filter to the idempotent awk pipeline. Ensures legacy headers from older script versions without the explicit `# disable_macos_updates:managed` tag are completely purged upon re-execution.
+- **Author & Contact Header Normalization**:
+  - Corrected author identification in both script headers and documentation to `Harry Dertin Sutisna Alsyundawy (@alsyundawy)`, replacing placeholder nickname entries.
+- **Markdownlint Standalone Configuration**:
+  - Replaced unresolvable `extends` dependencies with self-contained root configurations in `.markdownlint.json` and `.markdownlint.yaml`, eliminating VS Code extension crash warnings.
 
 ### Added
+
 - **Standardized Author & Contact Metadata Header**:
-  - Official script identification header in both scripts containing Script Name, Version (1.2.0), Created Date (2026-09-14), Last Updated (2026-09-22), Author (`alsyundawy` / `༺ Initial H ༻`), Email (`alsyundawy@gmail.com`), Website (`https://www.alsyundawy.com`), GitHub (`https://github.com/alsyundawy`), Twitter / X (`https://x.com/alsyundawy`), Organization (`WWW.ALSYUNDAWY.NET`), and Location (`DKI Jakarta, Indonesia`).
-- **Multi-OS Compatibility Invariant**:
-  - Verified across macOS Monterey (12), Ventura (13), Sonoma (14), Sequoia (15), and Tahoe (16) on both Apple Silicon (M1–M4) and Intel (x86_64).
+  - Official script identification header in both scripts containing Script Name, Version (1.2.0), Created Date (2026-09-14), Last Updated (2026-09-22), Author (`Harry Dertin Sutisna Alsyundawy (@alsyundawy)`), Email (`alsyundawy@gmail.com`), Website (`https://www.alsyundawy.com`), GitHub (`https://github.com/alsyundawy`), Twitter / X (`https://x.com/alsyundawy`), Organization (`WWW.ALSYUNDAWY.NET`), and Location (`DKI Jakarta, Indonesia`).
+- **Multi-OS & Apple Silicon Architecture Matrix**:
+  - Comprehensive verification and documentation across macOS Monterey (12), Ventura (13), Sonoma (14), Sequoia (15), Tahoe (26), and Golden Gate (27).
+  - Explicit hardware coverage across all authentic Apple Silicon processor generations (M1, M2, M3, M4, M5, M6 — Base, Pro, Max, Ultra tiers), documenting Intel x86_64 deprecation after macOS 26 Tahoe.
+- **Operations Manual & Architecture Guidelines**:
+  - Expanded `MANUAL.md` with complete operational runbooks, pre-flight checklists, and fleet management guides for Jamf Pro, Munki, Kandji, Mosyle, and Ansible.
+  - Expanded `DOCNOTE.md` with 6 formal Architectural Decision Records (ADRs), low-level Darwin invariants, and BSD awk regex specifications.
 
 ### Updated
+
 - `DOCNOTE` in both scripts expanded with entries 7–10 (restore) and 7–12 (disable) to formally document all v1.2.0 architectural enhancements.
 - Header Security sections now document `$TMPDIR` sandbox compliance.
 
@@ -35,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-09-14
 
 ### Fixed
+
 - **ShellCheck Warning SC2034**:
   - Referenced `SCRIPT_NAME` in backup path generation and header banners across both scripts, resolving unused variable warnings.
 - **Arithmetic Crash on Zero Matches**:
@@ -55,10 +69,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-09-14
 
 ### Added
+
 - Initial public release of **Disable-MacOS-Updates**.
 - Full macOS automatic software update discovery, download, and background installation disabler (`disable_macos_updates.sh`).
 - Complete restoration and recovery utility (`restore_macos_updates.sh`).
-- Defense-in-depth Apple update CDN sinkholing via `/etc/hosts` targeting `swscan.apple.com`, `swdownload.apple.com`, `swcdn.apple.com`, and `updates-http.cdn-apple.com`.
+- Apple update CDN sinkholing via `/etc/hosts` targeting `swscan.apple.com`, `swdownload.apple.com`, `swcdn.apple.com`, and `updates-http.cdn-apple.com`.
 - Background launch daemon management via modern `launchctl` service targets.
 - Baseline preference backup (`/var/db/disable_macos_updates_prefs.bak`) and timestamped `/etc/hosts` backups.
 - DNS cache flushing via `dscacheutil` and `mDNSResponder`.

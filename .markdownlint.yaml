@@ -1,0 +1,20 @@
+# Standalone markdownlint configuration for VS Code and editors
+
+# Line length (Prettier handles line wrapping)
+MD013: false
+
+# Keep a Changelog standard allows duplicate headings (e.g. ### Fixed, ### Added) under different versions
+MD024:
+  siblings_only: true
+
+# Allow semantic HTML containers for centered badges and hero banners in GitHub README
+MD033:
+  allowed_elements:
+    - div
+    - p
+    - span
+    - img
+    - br
+
+# Allow files to begin with HTML badge wrapper blocks (e.g. <div align="center">)
+MD041: false
