@@ -105,3 +105,18 @@ To guarantee that `restore_macos_updates.sh` removes **only** lines injected by 
 # disable_macos_updates:managed
 ```
 During restoration, the awk filter checks `index($0, tag)` to delete all managed lines in a single pass without modifying any user-defined or third-party `/etc/hosts` entries.
+
+---
+
+## 7. Author & Contact Identification Specification
+
+To ensure traceability, provenance, and accountability across enterprise deployments, both scripts feature standardized headers detailing:
+- Script Name & Semantic Version (`1.2.0`)
+- Creation (`2026-09-14`) & Modification (`2026-09-22`) Timestamps
+- Author: `alsyundawy (༺ Initial H ༻)`
+- Email: `alsyundawy@gmail.com`
+- Official Website: `https://www.alsyundawy.com`
+- GitHub: `https://github.com/alsyundawy`
+- Twitter / X: `https://x.com/alsyundawy (@alsyundawy)`
+- Organization: `WWW.ALSYUNDAWY.NET`
+- Location: `DKI Jakarta, Indonesia`

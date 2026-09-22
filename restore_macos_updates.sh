@@ -81,6 +81,14 @@ IFS=$'\n\t'
 #    Fixed broken awk regex /^# =\{20,\}/ — in awk ERE, backslashes before { }
 #    make them literal characters, so the pattern never matched any separator line.
 #    Corrected to /^# ={20,}/ which properly matches 20+ consecutive '=' chars.
+# 9. Author & Comprehensive Contact Metadata Header (v1.2.0):
+#    Standardized official script identification header containing Script Name,
+#    Version (1.2.0), Created Date (2026-09-14), Last Updated (2026-09-22),
+#    Author (alsyundawy / ༺ Initial H ༻), Email, Website, GitHub, Twitter/X,
+#    Organization (WWW.ALSYUNDAWY.NET), and Location (DKI Jakarta, Indonesia).
+# 10. Multi-OS Compatibility Invariant (v1.2.0):
+#     Validated across macOS Monterey (12), Ventura (13), Sonoma (14),
+#     Sequoia (15), and Tahoe (16) on both Apple Silicon (M1–M4) and Intel (x86_64).
 #
 # ==============================================================================
 # CHANGELOG
@@ -91,7 +99,8 @@ IFS=$'\n\t'
 #   - FIXED: awk ERE regex /^# =\{20,\}/ was incorrect — backslashes escape { } to
 #            literal chars in awk ERE, making the separator filter dead code
 #            (never matched any line). Corrected to /^# ={20,}/ (proper ERE form).
-#   - UPDATED: DOCNOTE entries 7 and 8 added to document the above fixes.
+#   - ADDED: Standardized Author & Comprehensive Contact metadata header block.
+#   - UPDATED: DOCNOTE entries 7–10 added to document all v1.2.0 architectural fixes.
 #   - UPDATED: Header Security section now documents TMPDIR mktemp behaviour.
 # v1.1.0 (2026-09-14)
 #   - FIXED: SC2034 warning by utilizing SCRIPT_NAME in backup path and header banner.

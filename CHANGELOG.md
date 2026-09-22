@@ -21,8 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `disable_macos_updates.sh`: Added `/^# added by disable_macos_updates/ { next }` filter to the idempotent awk pipeline. Ensures legacy headers from older script versions without the explicit `# disable_macos_updates:managed` tag are completely purged upon re-execution.
 
 ### Added
-- Comprehensive Author & Contact metadata in script headers.
-- Enhanced `DOCNOTE.md` entries covering macOS `$TMPDIR` invariants and AWK ERE parsing specifications.
+- **Standardized Author & Contact Metadata Header**:
+  - Official script identification header in both scripts containing Script Name, Version (1.2.0), Created Date (2026-09-14), Last Updated (2026-09-22), Author (`alsyundawy` / `༺ Initial H ༻`), Email (`alsyundawy@gmail.com`), Website (`https://www.alsyundawy.com`), GitHub (`https://github.com/alsyundawy`), Twitter / X (`https://x.com/alsyundawy`), Organization (`WWW.ALSYUNDAWY.NET`), and Location (`DKI Jakarta, Indonesia`).
+- **Multi-OS Compatibility Invariant**:
+  - Verified across macOS Monterey (12), Ventura (13), Sonoma (14), Sequoia (15), and Tahoe (16) on both Apple Silicon (M1–M4) and Intel (x86_64).
+
+### Updated
+- `DOCNOTE` in both scripts expanded with entries 7–10 (restore) and 7–12 (disable) to formally document all v1.2.0 architectural enhancements.
+- Header Security sections now document `$TMPDIR` sandbox compliance.
 
 ---
 

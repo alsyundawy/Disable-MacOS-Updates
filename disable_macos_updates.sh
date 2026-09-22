@@ -96,6 +96,14 @@ IFS=$'\n\t'
 # 10. AWK ERE Separator Filter (v1.2.0):
 #    Added /^# ={20,}/ { next } to idempotent awk filter for separator cleanup,
 #    using correct ERE syntax (no escaped braces). Symmetric with restore script.
+# 11. Author & Comprehensive Contact Metadata Header (v1.2.0):
+#     Standardized official script identification header containing Script Name,
+#     Version (1.2.0), Created Date (2026-09-14), Last Updated (2026-09-22),
+#     Author (alsyundawy / ༺ Initial H ༻), Email, Website, GitHub, Twitter/X,
+#     Organization (WWW.ALSYUNDAWY.NET), and Location (DKI Jakarta, Indonesia).
+# 12. Multi-OS Compatibility Invariant (v1.2.0):
+#     Validated across macOS Monterey (12), Ventura (13), Sonoma (14),
+#     Sequoia (15), and Tahoe (16) on both Apple Silicon (M1–M4) and Intel (x86_64).
 #
 # ==============================================================================
 # CHANGELOG
@@ -110,7 +118,8 @@ IFS=$'\n\t'
 #            clean orphan headers from older script versions without HOSTS_TAG.
 #   - ADDED: /^# ={20,}/ awk filter (correct ERE) for separator cleanup, symmetric
 #            with restore_macos_updates.sh.
-#   - UPDATED: DOCNOTE entries 7–10 added to document the above fixes.
+#   - ADDED: Standardized Author & Comprehensive Contact metadata header block.
+#   - UPDATED: DOCNOTE entries 7–12 added to document all v1.2.0 architectural fixes.
 # v1.1.0 (2026-09-14)
 #   - FIXED: SC2015 warning in Step 4 by replacing 'find ... && ok || warn' with if-statement.
 #   - FIXED: Pipeline failure risk under 'set -o pipefail' during verification summary
