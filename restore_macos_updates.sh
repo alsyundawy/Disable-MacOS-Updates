@@ -33,7 +33,9 @@ IFS=$'\n\t'
 #     6. Triggers a new software update check (softwareupdate --list)
 #
 # Usage:
-#     sudo ./restore_macos_updates.sh
+#     ./restore_macos_updates.sh         (prompts for sudo password automatically)
+#     sudo ./restore_macos_updates.sh    (explicit superuser execution)
+#     curl -fsSL https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/restore_macos_updates.sh | sudo bash
 #
 # Notes:
 #     - Requires macOS (Darwin) and must be run as root (via sudo).
@@ -89,18 +91,26 @@ IFS=$'\n\t'
 # 10. Multi-OS Compatibility Invariant (v1.2.0):
 #     Validated across macOS Monterey (12), Ventura (13), Sonoma (14),
 #     Sequoia (15), Tahoe (26), and Golden Gate (27) on Apple Silicon (M1–M6: Base, Pro, Max, Ultra) and Intel (x86_64 where supported).
+# 11. Sudo Auto-Elevation & Piped Execution Handling (v1.2.0):
+#     Scripts automatically detect non-root execution (EUID != 0) when run from a
+#     local file on disk and re-execute via exec sudo -- bash "${BASH_SOURCE[0]}" "$@",
+#     prompting for the sudo password interactively without needing sudo in command.
 #
 # ==============================================================================
 # CHANGELOG
 # ==============================================================================
 # v1.2.0 (2026-09-22)
+#   - ADDED: Transparent sudo auto-elevation with interactive password prompt
+#            when executed locally without root privileges (no need to type sudo).
+#   - ADDED: Safe detection of piped execution (curl/wget) with informative error
+#            if piped without superuser privileges.
 #   - FIXED: mktemp used hardcoded /tmp instead of ${TMPDIR:-/tmp}, bypassing the
 #            macOS per-session secure sandbox temp directory (/var/folders/...).
 #   - FIXED: awk ERE regex /^# =\{20,\}/ was incorrect — backslashes escape { } to
 #            literal chars in awk ERE, making the separator filter dead code
 #            (never matched any line). Corrected to /^# ={20,}/ (proper ERE form).
 #   - ADDED: Standardized Author & Comprehensive Contact metadata header block.
-#   - UPDATED: DOCNOTE entries 7–10 added to document all v1.2.0 architectural fixes.
+#   - UPDATED: DOCNOTE entries 7–11 added to document all v1.2.0 architectural fixes.
 #   - UPDATED: Header Security section now documents TMPDIR mktemp behaviour.
 # v1.1.0 (2026-09-14)
 #   - FIXED: SC2034 warning by utilizing SCRIPT_NAME in backup path and header banner.
@@ -192,7 +202,17 @@ trap 'exit 143' TERM
 # ==============================================================================
 
 [[ "$(uname -s || true)" == "Darwin" ]] || die "This script is for macOS only."
-[[ ${EUID} -eq 0 ]] || die "Must be run as root. Use: sudo $0"
+
+# Enforce root privileges with automatic sudo elevation for local script files
+if [[ ${EUID} -ne 0 ]]; then
+	command -v sudo >/dev/null 2>&1 || die "Command 'sudo' not found. Please run as root."
+	if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
+		warn "Root privileges required. Requesting sudo password..."
+		exec sudo -- bash "${BASH_SOURCE[0]}" "$@"
+	else
+		die "Root privileges required. Please execute with 'sudo' (e.g., curl -fsSL <URL> | sudo bash)."
+	fi
+fi
 ((BASH_VERSINFO[0] >= 3)) || die "Bash 3.2+ is required."
 
 for _c in awk chmod cp defaults dscacheutil grep killall launchctl mktemp mv rm softwareupdate sw_vers; do

@@ -6,7 +6,7 @@
 
 ## Control macOS Automatic Software Updates with Clean Reversibility
 
-[![Latest Release](https://img.shields.io/badge/Release-v1.2.0-0284c7?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/alsyundawy/Disable-MacOS-Updates/releases)
+[![Latest Release](https://img.shields.io/badge/Release-v1.2.0-0284c7?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.2.0)
 [![Bash 3.2+](https://img.shields.io/badge/Shell-Bash%203.2%2B%20%7C%20POSIX-4eaa25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![macOS Compatibility](https://img.shields.io/badge/macOS-12%20Monterey%20%E2%80%94%2027%20Golden%20Gate-000000?style=for-the-badge&logo=apple&logoColor=white)](https://apple.com/macos)
 [![Architecture](<https://img.shields.io/badge/Arch-Apple%20Silicon%20(M1--M6)%20%26%20Intel-f59e0b?style=for-the-badge&logo=apple&logoColor=white>)](https://apple.com)
@@ -18,11 +18,20 @@
   A pair of Bash scripts to disable macOS automatic software updates and symmetrically restore them when needed.
 </p>
 
+<p align="center">
+  <a href="https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.2.0">
+    <img src="https://img.shields.io/badge/🚀_Download_Latest_Release-v1.2.0-238636?style=for-the-badge&logo=github&logoColor=white" alt="Download Latest Release v1.2.0">
+  </a>
+  <a href="https://github.com/alsyundawy/Disable-MacOS-Updates/releases">
+    <img src="https://img.shields.io/badge/📦_All_Releases-View-0284c7?style=for-the-badge&logo=github&logoColor=white" alt="All Releases">
+  </a>
+</p>
+
 > Designed and maintained by<br>
 > **[`HARRY DERTIN SUTISNA ALSYUNDAWY (@alsyundawy)`](https://github.com/alsyundawy)** —<br>
 > Built for audio/video workstations (DAW), render systems, and machines where automatic updates cause disruptions.
 >
-> 📦 **[`GitHub Releases`](https://github.com/alsyundawy/Disable-MacOS-Updates/releases)** &nbsp;|&nbsp;
+> 📦 **[`GitHub Releases (v1.2.0)`](https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.2.0)** &nbsp;|&nbsp;
 > 📖 **[`Operations Manual`](MANUAL.md)** &nbsp;|&nbsp;
 > 🏛️ **[`Architecture & Engineering Notes`](DOCNOTE.md)** &nbsp;|&nbsp;
 > 📜 **[`Full Changelog`](CHANGELOG.md)** &nbsp;|&nbsp;
@@ -71,7 +80,7 @@ While macOS System Settings provides toggles, background daemon tasks and catalo
 
 ### 1. CDN Sinkholing via /etc/hosts
 
-- **Loopback Mapping**: Redirects Apple update catalog and package distribution hostnames (`swscan.apple.com`, `swdownload.apple.com`, `swcdn.apple.com`, `updates-http.cdn-apple.com`) to `127.0.0.1`.
+- **Loopback Mapping**: Redirects all 7 Apple update catalog and package distribution hostnames (`swscan.apple.com`, `swdownload.apple.com`, `swcdn.apple.com`, `updates-http.cdn-apple.com`, `updates.cdn-apple.com`, `xp.apple.com`, `gdmf.apple.com`) to `127.0.0.1`.
 - **Zero App Store Disruption**: Leaves normal Mac App Store manual downloads and iCloud services operational.
 
 ### 2. Atomic Hosts File Updates
@@ -87,7 +96,7 @@ While macOS System Settings provides toggles, background daemon tasks and catalo
 ### 4. Symmetrical Daemon Management
 
 - **Modern Launchctl Addressing**: Interacts with services via domain target syntax (`system/<service-label>`), searching both `/Library/LaunchDaemons` and `/System/Library/LaunchDaemons`.
-- **Symmetrical Recovery**: Restores `com.apple.softwareupdated`, `com.apple.mobile.softwareupdated`, `com.apple.storedownloadd`, `com.apple.InstallAssistantService`, and `com.apple.commerce`.
+- **Symmetrical Recovery**: Restores all 6 update daemons: `com.apple.softwareupdated`, `com.apple.mobile.softwareupdated`, `com.apple.InstallAssistantService`, `com.apple.storedownloadd`, `com.apple.storekitagentd`, and `com.apple.commerce`.
 
 ### 5. Native Execution
 
@@ -100,7 +109,7 @@ While macOS System Settings provides toggles, background daemon tasks and catalo
 | Capability                       | Technical Implementation                                                           | Benefit                                                                         |
 | :------------------------------- | :--------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
 | **Preference Control**           | Sets 6 keys in `com.apple.SoftwareUpdate` & `com.apple.commerce` to `false`.       | Prevents background discovery, downloads, auto-restarts, and App Store updates. |
-| **Atomic `/etc/hosts` Sinkhole** | Injects loopback mapping for 4 Apple CDN domains via `mktemp` and `rename(2)`.     | Blocks network-level update catalog checks if daemons trigger.                  |
+| **Atomic `/etc/hosts` Sinkhole** | Injects loopback mapping for 7 Apple CDN domains via `mktemp` and `rename(2)`.     | Blocks network-level update catalog checks if daemons trigger.                  |
 | **Clean Rollback**               | Uses single-pass BSD `awk` to remove only `# disable_macos_updates:managed` lines. | Restores original hosts state without modifying other entries.                  |
 | **Safe Process Substitution**    | Replaces unshielded pipelines with `while IFS= read -r ... done < <(...)`.         | Eliminates false-positive `set -o pipefail` script crashes.                     |
 | **Sandbox `$TMPDIR` Compliance** | Uses `mktemp "${TMPDIR:-/tmp}/hosts.XXXXXXXX"` instead of global `/tmp`.           | Complies with macOS sandbox boundaries and avoids symlink race hazards.         |
@@ -114,12 +123,12 @@ While macOS System Settings provides toggles, background daemon tasks and catalo
 ```mermaid
 flowchart TB
     subgraph Trigger["User / Automation Invocation"]
-        ExecDisable["sudo ./disable_macos_updates.sh"]
-        ExecRestore["sudo ./restore_macos_updates.sh"]
+        ExecDisable["./disable_macos_updates.sh (Auto-elevates)"]
+        ExecRestore["./restore_macos_updates.sh (Auto-elevates)"]
     end
 
     subgraph Preflight["Preflight Verification & Baseline Backup"]
-        CheckRoot["Check EUID == 0 (root)"]
+        CheckRoot["Check EUID == 0 (prompts sudo password if non-root)"]
         CheckDarwin["Verify macOS Darwin Kernel"]
         CheckDeps["Validate Core Binaries (defaults, launchctl, awk, etc.)"]
         SaveBackup["Capture Baseline Backup in /var/db/ (0600 root:wheel)"]
@@ -160,6 +169,9 @@ When disabled, the following Apple update domains are mapped to `127.0.0.1`:
 | `swdownload.apple.com`       | Primary CDN package asset download distribution endpoint        |
 | `swcdn.apple.com`            | Asset delivery and delta update package distribution server     |
 | `updates-http.cdn-apple.com` | HTTP/HTTPS content delivery endpoint for system update payloads |
+| `updates.cdn-apple.com`      | HTTPS content delivery endpoint for system update payloads      |
+| `xp.apple.com`               | Diagnostic reporting and software update telemetry endpoint     |
+| `gdmf.apple.com`             | Global Device Management Framework / OS catalog dispatcher      |
 
 ---
 
@@ -178,21 +190,57 @@ When disabled, the following Apple update domains are mapped to `127.0.0.1`:
 
 ## Quick Start & Operational Workflow
 
-### 1. Disable Automatic Updates
+### Method A: Direct Execution via `curl` or `wget` (Zero-Clone)
+
+Run directly in Terminal without cloning the repository. `curl` is pre-installed natively on every macOS system (`wget` is supported if installed via Homebrew):
+
+#### 1. Disable Automatic Updates
+
+```bash
+# Using native macOS curl
+curl -fsSL https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/disable_macos_updates.sh | sudo bash
+
+# Or using wget (if installed)
+wget -qO- https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/disable_macos_updates.sh | sudo bash
+```
+
+#### 2. Restore Automatic Updates
+
+```bash
+# Using native macOS curl
+curl -fsSL https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/restore_macos_updates.sh | sudo bash
+
+# Or using wget (if installed)
+wget -qO- https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/restore_macos_updates.sh | sudo bash
+```
+
+---
+
+### Method B: Clone and Run Locally (Self-Elevating Sudo)
+
+Both scripts feature automatic `sudo` elevation: you do **not** need to type `sudo` when executing the command (`./disable_macos_updates.sh` or `bash disable_macos_updates.sh`); the script automatically prompts for your administrator password upon execution:
+
+#### 1. Clone Repository & Disable
 
 ```bash
 # Clone the repository
 git clone https://github.com/alsyundawy/Disable-MacOS-Updates.git
 cd Disable-MacOS-Updates
 
-# Execute disable script with superuser privileges
+# Execute disable script (prompts for sudo password automatically if not root)
+./disable_macos_updates.sh
+
+# Or execute with explicit sudo
 sudo ./disable_macos_updates.sh
 ```
 
-### 2. Restore Automatic Updates
+#### 2. Restore
 
 ```bash
-# Execute restore script with superuser privileges
+# Execute restore script (prompts for sudo password automatically if not root)
+./restore_macos_updates.sh
+
+# Or execute with explicit sudo
 sudo ./restore_macos_updates.sh
 ```
 
@@ -203,7 +251,7 @@ sudo ./restore_macos_updates.sh
 defaults read /Library/Preferences/com.apple.SoftwareUpdate
 
 # Verify /etc/hosts sinkhole entries
-grep -i "disable_macos_updates" /etc/hosts
+grep "disable_macos_updates:managed" /etc/hosts
 
 # Verify DNS resolution of update CDN
 dscacheutil -q host -a name swscan.apple.com
@@ -263,9 +311,6 @@ Refer to [`DOCNOTE.md`](DOCNOTE.md) for full Architectural Decision Records (ADR
 
 ```text
 Disable-MacOS-Updates/
-├── .markdownlint.json         # Standalone Markdownlint configuration (VS Code / editors)
-├── .markdownlint.yaml         # YAML Markdownlint configuration
-├── .trunk/                    # Trunk linter suite configuration
 ├── CHANGELOG.md               # Semantic versioned changelog (Keep a Changelog standard)
 ├── DOCNOTE.md                 # Architecture, engineering guidelines, and ADRs
 ├── LICENSE                    # MIT License

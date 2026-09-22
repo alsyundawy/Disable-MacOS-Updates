@@ -56,8 +56,8 @@ In audio production (DAW), video editing, or staging environments, unexpected op
 | **Apple Silicon Support** | M1, M2, M3, M4, M5, M6 across Base, Pro, Max, and Ultra tiers                                                                                                                        |
 | **Intel x86_64 Support**  | Supported through macOS 26 Tahoe (dropped in macOS 27 Golden Gate)                                                                                                                   |
 | **Shell Engine**          | Native macOS `/bin/bash` (v3.2.57+) or modern Bash 4+/5+                                                                                                                             |
-| **Privileges**            | Superuser / root execution (`sudo`)                                                                                                                                                  |
-| **Dependencies**          | Native macOS utilities (`defaults`, `launchctl`, `dscacheutil`, `mDNSResponder`, `awk`, `mktemp`)                                                                                    |
+| **Privileges**            | Superuser / root execution (`sudo` / interactive password prompt)                                                                                                                    |
+| **Dependencies**          | Native macOS utilities (`awk`, `chmod`, `cp`, `defaults`, `dscacheutil`, `find`, `grep`, `killall`, `launchctl`, `mktemp`, `mv`, `rm`, `softwareupdate`, `sw_vers`)                  |
 
 ---
 
@@ -68,7 +68,7 @@ In audio production (DAW), video editing, or staging environments, unexpected op
 Before executing the suite on a machine, verify the following baseline prerequisites:
 
 ```bash
-# 1. Verify root execution permissions
+# 1. Verify root execution permissions (or allow script to prompt automatically)
 sudo -v
 
 # 2. Check current macOS version and kernel architecture
@@ -85,6 +85,18 @@ ls -la /etc/hosts
 
 To halt macOS update discovery, background downloads, and automated installs:
 
+#### Method A: Direct Execution via `curl` or `wget` (Zero-Clone)
+
+```bash
+# Using native macOS curl
+curl -fsSL https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/disable_macos_updates.sh | sudo bash
+
+# Or using wget (if installed)
+wget -qO- https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/disable_macos_updates.sh | sudo bash
+```
+
+#### Method B: Local Git Repository Execution
+
 ```bash
 # 1. Navigate to the script location
 cd /path/to/Disable-MacOS-Updates
@@ -92,19 +104,23 @@ cd /path/to/Disable-MacOS-Updates
 # 2. Make scripts executable (if needed)
 chmod +x disable_macos_updates.sh restore_macos_updates.sh
 
-# 3. Execute with root privileges
+# 3. Execute (no sudo prefix needed — script automatically prompts for sudo password)
+./disable_macos_updates.sh
+
+# Or execute with explicit sudo
 sudo ./disable_macos_updates.sh
 ```
 
 #### Step-by-Step Execution Sequence
 
-1. **Preflight Validation**: Validates EUID (`0`), Darwin OS kernel, and existence of all binary dependencies (`defaults`, `launchctl`, `dscacheutil`, `mDNSResponder`, `awk`, `mktemp`, `grep`).
-2. **Baseline Backup**: Records initial `com.apple.SoftwareUpdate` values to `/var/db/disable_macos_updates_prefs.bak` and a pristine copy of `/etc/hosts` to `/var/db/disable_macos_updates_hosts.bak`.
-3. **Defaults Enforcement**: Writes `false` to all automatic check, download, install, configuration data, and App Store preferences.
-4. **Daemon Unloading**: Unloads `com.apple.softwareupdated` and related daemons via modern `launchctl bootout`.
-5. **Cache Purging**: Cleans out `/Library/Updates/` staging directory.
-6. **CDN Sinkholing**: Atomically appends tagged loopback records (`127.0.0.1`) for Apple update domains to `/etc/hosts`.
-7. **DNS Flush**: Flushes local resolver caches via `dscacheutil` and `killall -HUP mDNSResponder`.
+1. **Preflight Validation**: Validates EUID (automatically triggers interactive `sudo` password prompt if run as non-root from local file, or halts safely if piped without root), confirms Darwin OS kernel, validates Bash 3.2+, and verifies presence of all required native binaries (`awk`, `chmod`, `cp`, `defaults`, `dscacheutil`, `find`, `grep`, `killall`, `launchctl`, `mktemp`, `mv`, `rm`, `sw_vers`).
+2. **Step 1/6 — Baseline Backup**: Records initial `com.apple.SoftwareUpdate` and `com.apple.commerce` values to `/var/db/disable_macos_updates_prefs.bak` with `0600 root:wheel` permissions (preserves original baseline on repeated runs).
+3. **Step 2/6 — Defaults Enforcement**: Writes `false` to all automatic check, download, install, configuration data, and App Store preferences (`com.apple.SoftwareUpdate` and `com.apple.commerce` / `com.apple.Commerce`).
+4. **Step 3/6 — Daemon Unloading**: Unloads all 6 background update daemons (`com.apple.softwareupdated`, `com.apple.mobile.softwareupdated`, `com.apple.InstallAssistantService`, `com.apple.storedownloadd`, `com.apple.storekitagentd`, `com.apple.commerce`) via modern `launchctl bootout`.
+5. **Step 4/6 — Cache Purging**: Safely purges the `/Library/Updates/` staging directory using `find /Library/Updates -mindepth 1 -delete` without removing the parent directory or exceeding shell argument limits.
+6. **Step 5/6 — CDN Sinkholing**: Captures pristine baseline `/var/db/disable_macos_updates_hosts.bak` and daily backup `/var/db/disable_macos_updates_hosts.bak.YYYYMMDD`, cleans old tagged blocks, and atomically injects loopback records (`127.0.0.1`) for 7 Apple update CDN domains into `/etc/hosts`.
+7. **Step 6/6 — DNS Flush**: Flushes local resolver caches via `dscacheutil -flushcache` and `killall -HUP mDNSResponder`.
+8. **Verification Summary**: Displays the active preference values and injected `/etc/hosts` sinkhole records in terminal for instant administrator confirmation.
 
 ---
 
@@ -112,17 +128,35 @@ sudo ./disable_macos_updates.sh
 
 To revert all settings back to factory defaults and allow standard updates:
 
+#### Method A: Direct Execution via `curl` or `wget` (Zero-Clone)
+
 ```bash
+# Using native macOS curl
+curl -fsSL https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/restore_macos_updates.sh | sudo bash
+
+# Or using wget (if installed)
+wget -qO- https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/restore_macos_updates.sh | sudo bash
+```
+
+#### Method B: Local Git Repository Execution
+
+```bash
+# Execute (no sudo prefix needed — script automatically prompts for sudo password)
+./restore_macos_updates.sh
+
+# Or execute with explicit sudo
 sudo ./restore_macos_updates.sh
 ```
 
 #### Step-by-Step Restoration Sequence
 
-1. **Defaults Re-enabling**: Sets all update flags back to `-bool true`.
-2. **Hosts Cleaning**: Strips all lines matching `# disable_macos_updates:managed` from `/etc/hosts` via atomic temporary file replacement.
-3. **Daemon Reloading**: Bootstraps and kickstarts `com.apple.softwareupdated` and related daemons.
-4. **DNS Cache Flush**: Re-enables clean resolution of Apple update CDN domains.
-5. **Update Check**: Triggers `softwareupdate --list` to populate available updates immediately.
+1. **Preflight Validation**: Validates EUID (auto-elevates with password prompt if run from local file), confirms Darwin OS kernel, validates Bash 3.2+, and verifies required binaries (`awk`, `chmod`, `cp`, `defaults`, `dscacheutil`, `grep`, `killall`, `launchctl`, `mktemp`, `mv`, `rm`, `softwareupdate`, `sw_vers`).
+2. **Step 1/5 — Defaults Re-enabling**: Sets all update flags back to `-bool true` on `com.apple.SoftwareUpdate` and `com.apple.commerce` (including `com.apple.Commerce`). Displays original values from baseline backup for reference.
+3. **Step 2/5 — Hosts Cleaning**: Creates pre-restore backup `/var/db/restore_macos_updates_hosts_YYYYMMDD_HHMMSS.bak`, strips all lines tagged with `# disable_macos_updates:managed` and header blocks from `/etc/hosts` in a single-pass BSD `awk` pipeline, and commits changes atomically via `rename(2)`.
+4. **Step 3/5 — Daemon Reloading**: Bootstraps and kickstarts all 6 background launch daemons (`com.apple.softwareupdated`, `com.apple.mobile.softwareupdated`, `com.apple.InstallAssistantService`, `com.apple.storedownloadd`, `com.apple.storekitagentd`, `com.apple.commerce`).
+5. **Step 4/5 — DNS Cache Flush**: Flushes resolver cache via `dscacheutil -flushcache` and `killall -HUP mDNSResponder` to restore clean network resolution to Apple update CDN servers.
+6. **Step 5/5 — Update Check**: Triggers `softwareupdate --list` to populate and verify update catalog availability.
+7. **Verification Summary**: Validates current preferences and confirms 0 managed sinkhole entries remain in `/etc/hosts`.
 
 ---
 
@@ -137,8 +171,8 @@ defaults read /Library/Preferences/com.apple.SoftwareUpdate
 # 2. Check App Store commerce preferences (should be 0 / false when disabled)
 defaults read /Library/Preferences/com.apple.commerce AutoUpdate
 
-# 3. Check /etc/hosts sinkhole entries (should show 4 managed records when disabled)
-grep -i "disable_macos_updates:managed" /etc/hosts
+# 3. Check /etc/hosts sinkhole entries (should show 7 managed records when disabled)
+grep "disable_macos_updates:managed" /etc/hosts
 
 # 4. Verify DNS resolution of update CDN
 dscacheutil -q host -a name swscan.apple.com
@@ -173,6 +207,9 @@ Even when preference flags are disabled, background helper processes may attempt
 - `swdownload.apple.com`: Package download CDN.
 - `swcdn.apple.com`: Asset and delta update distribution server.
 - `updates-http.cdn-apple.com`: HTTP/HTTPS content delivery endpoint.
+- `updates.cdn-apple.com`: HTTPS content delivery endpoint.
+- `xp.apple.com`: Diagnostic reporting and update telemetry endpoint.
+- `gdmf.apple.com`: Global Device Management Framework / OS catalog dispatcher.
 
 ---
 
@@ -212,7 +249,7 @@ killall -HUP mDNSResponder
 In addition, `disable_macos_updates.sh` removes partially downloaded staging packages from the system volume:
 
 ```bash
-rm -rf /Library/Updates/*
+find /Library/Updates -mindepth 1 -delete 2>/dev/null
 ```
 
 This immediately reclaims storage space previously occupied by staged update installers.
@@ -228,6 +265,7 @@ All backups are stored in `/var/db/`, which is root-owned, persistent across reb
 - `/var/db/disable_macos_updates_hosts.bak`: Pristine `/etc/hosts` captured before any sinkhole injection.
 - `/var/db/disable_macos_updates_hosts.bak.YYYYMMDD`: Daily timestamped backups for audit history.
 - `/var/db/disable_macos_updates_prefs.bak`: Original `defaults` values before disabling.
+- `/var/db/restore_macos_updates_hosts_YYYYMMDD_HHMMSS.bak`: Pre-restoration backup created prior to removing sinkholes.
 
 All backup files are strictly permissioned to `0600 root:wheel` to prevent unauthorized inspection.
 
@@ -250,10 +288,19 @@ sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticallyI
 sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate ConfigDataInstall -bool true
 sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate CriticalUpdateInstall -bool true
 sudo defaults write /Library/Preferences/com.apple.commerce AutoUpdate -bool true
+if [ -f "/Library/Preferences/com.apple.Commerce.plist" ]; then
+    sudo defaults write /Library/Preferences/com.apple.Commerce AutoUpdate -bool true
+fi
 
-# 3. Flush DNS
+# 3. Reload update daemons
+sudo launchctl kickstart -k system/com.apple.softwareupdated 2>/dev/null || true
+
+# 4. Flush DNS
 sudo dscacheutil -flushcache
 sudo killall -HUP mDNSResponder
+
+# 5. Trigger update check
+softwareupdate --list
 ```
 
 ---
@@ -342,13 +389,13 @@ exit 0      # Needs to run
 
 ## 7. Troubleshooting & Diagnostics
 
-| Symptom / Observation                     | Root Cause Analysis                                                                             | Remediation Steps                                                                                               |
-| :---------------------------------------- | :---------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------- |
-| **System Settings badge persists**        | macOS Dock and System Settings cache notification state in `com.apple.systempreferences.plist`. | Run `killall Dock; killall SystemSettings 2>/dev/null` in terminal.                                             |
-| **`softwareupdate --list` hangs**         | The command is attempting to contact sinkholed Apple CDN domains and waiting for TCP timeout.   | This is expected when updates are disabled. To restore normal operation, run `sudo ./restore_macos_updates.sh`. |
-| **App Store app updates fail**            | `com.apple.commerce AutoUpdate` is disabled.                                                    | Manual updates within the App Store app still function. Alternatively, re-enable commerce auto-updates.         |
-| **Corporate proxy bypasses `/etc/hosts`** | Some network PAC files or proxy agents route HTTP requests directly through proxy servers.      | Add `swscan.apple.com` and `swcdn.apple.com` to your proxy or firewall blackhole list.                          |
-| **Rapid Security Response (RSR) prompt**  | Pre-downloaded RSR payload was staged prior to script execution.                                | Purge staging directory: `sudo rm -rf /Library/Updates/*`.                                                      |
+| Symptom / Observation                     | Root Cause Analysis                                                                             | Remediation Steps                                                                                                                                 |
+| :---------------------------------------- | :---------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **System Settings badge persists**        | macOS Dock and System Settings cache notification state in `com.apple.systempreferences.plist`. | Run `killall Dock; killall SystemSettings 2>/dev/null` in terminal.                                                                               |
+| **`softwareupdate --list` hangs**         | The command is attempting to contact sinkholed Apple CDN domains and waiting for TCP timeout.   | This is expected when updates are disabled. To restore normal operation, run `./restore_macos_updates.sh` (or `sudo ./restore_macos_updates.sh`). |
+| **App Store app updates fail**            | `com.apple.commerce AutoUpdate` is disabled.                                                    | Manual updates within the App Store app still function. Alternatively, re-enable commerce auto-updates.                                           |
+| **Corporate proxy bypasses `/etc/hosts`** | Some network PAC files or proxy agents route HTTP requests directly through proxy servers.      | Add `swscan.apple.com` and `swcdn.apple.com` to your proxy or firewall blackhole list.                                                            |
+| **Rapid Security Response (RSR) prompt**  | Pre-downloaded RSR payload was staged prior to script execution.                                | Purge staging directory: `sudo find /Library/Updates -mindepth 1 -delete 2>/dev/null`.                                                            |
 
 ---
 

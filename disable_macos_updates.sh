@@ -33,9 +33,12 @@ IFS=$'\n\t'
 #     7. Flushes DNS cache
 #
 # Usage:
-#     sudo ./disable_macos_updates.sh
+#     ./disable_macos_updates.sh         (prompts for sudo password automatically)
+#     sudo ./disable_macos_updates.sh    (explicit superuser execution)
+#     curl -fsSL https://raw.githubusercontent.com/alsyundawy/Disable-MacOS-Updates/main/disable_macos_updates.sh | sudo bash
 #
 # Undo / Restore:
+#     ./restore_macos_updates.sh
 #     sudo ./restore_macos_updates.sh
 #
 # Notes:
@@ -104,11 +107,20 @@ IFS=$'\n\t'
 # 12. Multi-OS Compatibility Invariant (v1.2.0):
 #     Validated across macOS Monterey (12), Ventura (13), Sonoma (14),
 #     Sequoia (15), Tahoe (26), and Golden Gate (27) on Apple Silicon (M1–M6: Base, Pro, Max, Ultra) and Intel (x86_64 where supported).
+# 13. Sudo Auto-Elevation & Piped Execution Handling (v1.2.0):
+#     Scripts automatically detect non-root execution (EUID != 0) when run from a
+#     local file on disk and re-execute via exec sudo -- bash "${BASH_SOURCE[0]}" "$@",
+#     prompting for the sudo password interactively without needing sudo in command.
 #
 # ==============================================================================
 # CHANGELOG
 # ==============================================================================
 # v1.2.0 (2026-09-22)
+#   - ADDED: Transparent sudo auto-elevation with interactive password prompt
+#            when executed locally without root privileges (no need to type sudo).
+#   - ADDED: Safe detection of piped execution (curl/wget) with informative error
+#            if piped without superuser privileges.
+#   - FIXED: Typo in sinkhole logging ("Sinkholes:" -> "Sinkholed:").
 #   - FIXED: mktemp used hardcoded /tmp instead of ${TMPDIR:-/tmp}, bypassing the
 #            macOS per-session secure sandbox temp directory (/var/folders/...).
 #   - FIXED: Pristine /etc/hosts backup (grep -v > HOSTS_BACKUP) had no error guard;
@@ -119,7 +131,7 @@ IFS=$'\n\t'
 #   - ADDED: /^# ={20,}/ awk filter (correct ERE) for separator cleanup, symmetric
 #            with restore_macos_updates.sh.
 #   - ADDED: Standardized Author & Comprehensive Contact metadata header block.
-#   - UPDATED: DOCNOTE entries 7–12 added to document all v1.2.0 architectural fixes.
+#   - UPDATED: DOCNOTE entries 7–13 added to document all v1.2.0 architectural fixes.
 # v1.1.0 (2026-09-14)
 #   - FIXED: SC2015 warning in Step 4 by replacing 'find ... && ok || warn' with if-statement.
 #   - FIXED: Pipeline failure risk under 'set -o pipefail' during verification summary
@@ -170,6 +182,7 @@ readonly -a UPDATE_DAEMONS=(
 )
 
 TMP_HOSTS=""
+TMP_PRISTINE=""
 
 # ==============================================================================
 # TERMINAL COLORS (NO_COLOR convention)
@@ -214,6 +227,9 @@ cleanup() {
 	if [[ -n ${TMP_HOSTS} && -f ${TMP_HOSTS} ]]; then
 		rm -f -- "${TMP_HOSTS}"
 	fi
+	if [[ -n ${TMP_PRISTINE} && -f ${TMP_PRISTINE} ]]; then
+		rm -f -- "${TMP_PRISTINE}"
+	fi
 }
 
 trap cleanup EXIT
@@ -227,7 +243,17 @@ trap 'exit 143' TERM
 # ==============================================================================
 
 [[ "$(uname -s || true)" == "Darwin" ]] || die "This script is for macOS only."
-[[ ${EUID} -eq 0 ]] || die "Must be run as root. Use: sudo $0"
+
+# Enforce root privileges with automatic sudo elevation for local script files
+if [[ ${EUID} -ne 0 ]]; then
+	command -v sudo >/dev/null 2>&1 || die "Command 'sudo' not found. Please run as root."
+	if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
+		warn "Root privileges required. Requesting sudo password..."
+		exec sudo -- bash "${BASH_SOURCE[0]}" "$@"
+	else
+		die "Root privileges required. Please execute with 'sudo' (e.g., curl -fsSL <URL> | sudo bash)."
+	fi
+fi
 
 # Require bash 3.2+
 ((BASH_VERSINFO[0] >= 3)) || die "Bash 3.2+ is required."
@@ -245,7 +271,7 @@ unset _c
 printf "\n"
 printf "%s\n" "${C_CYAN}${C_BOLD}╔══════════════════════════════════════════════════════════════╗${C_RESET}"
 printf "%s\n" "${C_CYAN}${C_BOLD}║      🔒 macOS Update Disabler — v${SCRIPT_VERSION}            ║${C_RESET}"
-printf "%s\n" "${C_CYAN}${C_BOLD}║      Undo: sudo ./restore_macos_updates.sh                   ║${C_RESET}"
+printf "%s\n" "${C_CYAN}${C_BOLD}║      Undo: ./restore_macos_updates.sh                        ║${C_RESET}"
 printf "%s\n" "${C_CYAN}${C_BOLD}╚══════════════════════════════════════════════════════════════╝${C_RESET}"
 printf "\n"
 
@@ -380,12 +406,14 @@ step "5/6  Adding Apple update CDN domains to /etc/hosts sinkhole..."
 if [[ ! -f ${HOSTS_BACKUP} ]]; then
 	if grep -q "${HOSTS_TAG}" /etc/hosts 2>/dev/null; then
 		# Use temp file + atomic mv to prevent partial/empty HOSTS_BACKUP on read error
-		_tmp_pristine="$(mktemp "${TMPDIR:-/tmp}/hosts_pristine.XXXXXXXX")"
-		grep -v "${HOSTS_TAG}" /etc/hosts >"${_tmp_pristine}" || {
-			rm -f -- "${_tmp_pristine}"
+		TMP_PRISTINE="$(mktemp "${TMPDIR:-/tmp}/hosts_pristine.XXXXXXXX")"
+		grep -v "${HOSTS_TAG}" /etc/hosts >"${TMP_PRISTINE}" || {
+			rm -f -- "${TMP_PRISTINE}"
+			TMP_PRISTINE=""
 			die "Failed to build pristine /etc/hosts content for backup."
 		}
-		mv -f -- "${_tmp_pristine}" "${HOSTS_BACKUP}"
+		mv -f -- "${TMP_PRISTINE}" "${HOSTS_BACKUP}"
+		TMP_PRISTINE=""
 	else
 		cp -p -- /etc/hosts "${HOSTS_BACKUP}"
 	fi
@@ -436,7 +464,7 @@ awk -v tag="${HOSTS_TAG}" '
 	printf "# ============================================================ %s\n" "${HOSTS_TAG}"
 	printf "# Apple Update CDN Sinkhole — added by %s v%s %s\n" "${SCRIPT_NAME}" "${SCRIPT_VERSION}" "${HOSTS_TAG}"
 	printf "# Timestamp: %s %s\n" "$(date '+%Y-%m-%d %H:%M:%S %Z' || true)" "${HOSTS_TAG}"
-	printf "# Remove with: sudo ./restore_macos_updates.sh %s\n" "${HOSTS_TAG}"
+	printf "# Remove with: ./restore_macos_updates.sh %s\n" "${HOSTS_TAG}"
 	printf "# ============================================================ %s\n" "${HOSTS_TAG}"
 	for _domain in "${UPDATE_DOMAINS[@]}"; do
 		printf "127.0.0.1  %-40s %s\n" "${_domain}" "${HOSTS_TAG}"
@@ -453,7 +481,7 @@ chmod 644 /etc/hosts
 TMP_HOSTS="" # already moved; cleanup trap no longer needs it
 
 for _domain in "${UPDATE_DOMAINS[@]}"; do
-	ok "  Sinkholes: ${_domain} → 127.0.0.1"
+	ok "  Sinkholed: ${_domain} → 127.0.0.1"
 done
 
 # ==============================================================================
@@ -498,5 +526,5 @@ while IFS= read -r _line; do
 done < <(grep "${HOSTS_TAG}" /etc/hosts 2>/dev/null || true)
 
 printf "\n"
-warn "To re-enable updates, run:  ${C_BOLD}sudo ./restore_macos_updates.sh${C_RESET}"
+warn "To re-enable updates, run:  ${C_BOLD}./restore_macos_updates.sh${C_RESET} (or sudo ./restore_macos_updates.sh)"
 printf "\n"

@@ -66,6 +66,18 @@ _Architectural Decision Records (ADR), System Philosophy, and Low-Level Darwin I
 - **Decision**: Explicitly detect hardware architecture via `uname -m`, validate Apple Silicon generations (M1–M6) and Intel configurations, and document compatibility parameters across the suite.
 - **Rationale**: Provides clarity to system administrators managing heterogeneous hardware fleets during the final phases of the Apple Silicon architecture transition.
 
+### ADR-007: Transparent Sudo Auto-Elevation and Safe Remote Piped Execution
+
+- **Context**: Users frequently invoke maintenance scripts in Terminal as an unprivileged user without prefixing `sudo` (e.g. `./disable_macos_updates.sh` or `bash disable_macos_updates.sh`), resulting in immediate script termination. Furthermore, sysadmins and DevOps engineers require zero-clone remote execution via `curl` or `wget` pipelines.
+- **Decision**: Implement dynamic privilege evaluation:
+  1. If `EUID != 0` and the script is executing from a local file on disk (`[[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]`), transparently re-execute via `exec sudo -- bash "${BASH_SOURCE[0]}" "$@"`, prompting for password authentication interactively in the terminal without requiring the user to type `sudo` upfront.
+  2. If `EUID != 0` and the script is executing from a non-file stream (`curl ... | bash`), halt immediately with an informative error instructing the user to pipe into `sudo bash`.
+- **Rationale**:
+  1. Native macOS `sudo` handles the TTY password prompt cleanly before spawning the subshell.
+  2. Eliminates friction for end users who run `./disable_macos_updates.sh` without remembering to prepend `sudo`.
+  3. Guarding against stream/pipe re-execution prevents `exec sudo` from attempting to execute `bash` without a script payload or spawning an unintended root shell.
+  4. Preserves all arguments (`"$@"`) during elevation.
+
 ---
 
 ## 3. Shell Engineering & Defensive Hardening

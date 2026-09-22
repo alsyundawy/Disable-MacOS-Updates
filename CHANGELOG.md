@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] - 2026-09-22
 
+### Added
+
+- **Transparent Sudo Auto-Elevation with Interactive Password Prompt**:
+  - `disable_macos_updates.sh` & `restore_macos_updates.sh`: Scripts now detect non-root execution (`EUID != 0`) when run directly from a local script file (`[[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]`). Instead of abruptly terminating, the scripts automatically request administrator privileges via `exec sudo -- bash "${BASH_SOURCE[0]}" "$@"`, prompting for the sudo password interactively in the terminal without requiring the user to type `sudo` upfront.
+- **Safe Remote Piped Execution Detection**:
+  - `disable_macos_updates.sh` & `restore_macos_updates.sh`: When piped directly from `curl` or `wget` without superuser privileges (`curl ... | bash`), the scripts safely detect the absence of an on-disk source file and halt with an informative instruction directing the user to pipe to `sudo bash`.
+- **Direct Remote Execution via `curl` and `wget`**:
+  - `README.md` & `MANUAL.md`: Added direct one-liner execution instructions using native macOS `curl` and `wget` for both disabler and restorer utilities.
+- **Standardized Author & Contact Metadata Header**:
+  - Official script identification header in both scripts containing Script Name, Version (1.2.0), Created Date (2026-09-14), Last Updated (2026-09-22), Author (`Harry Dertin Sutisna Alsyundawy (@alsyundawy)`), Email (`alsyundawy@gmail.com`), Website (`https://www.alsyundawy.com`), GitHub (`https://github.com/alsyundawy`), Twitter / X (`https://x.com/alsyundawy`), Organization (`WWW.ALSYUNDAWY.NET`), and Location (`DKI Jakarta, Indonesia`).
+- **Multi-OS & Apple Silicon Architecture Matrix**:
+  - Comprehensive verification and documentation across macOS Monterey (12), Ventura (13), Sonoma (14), Sequoia (15), Tahoe (26), and Golden Gate (27).
+  - Explicit hardware coverage across all authentic Apple Silicon processor generations (M1, M2, M3, M4, M5, M6 — Base, Pro, Max, Ultra tiers), documenting Intel x86_64 deprecation after macOS 26 Tahoe.
+- **Operations Manual & Architecture Guidelines**:
+  - Expanded `MANUAL.md` with complete operational runbooks, pre-flight checklists, and fleet management guides for Jamf Pro, Munki, Kandji, Mosyle, and Ansible.
+  - Expanded `DOCNOTE.md` with 7 formal Architectural Decision Records (ADRs including ADR-007 for sudo auto-elevation), low-level Darwin invariants, and BSD awk regex specifications.
+
 ### Fixed
 
 - **macOS Sandbox & `$TMPDIR` Compliance**:
@@ -22,26 +39,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `disable_macos_updates.sh`: Replaced bare redirect `grep -v "${HOSTS_TAG}" /etc/hosts > "${HOSTS_BACKUP}"` with atomic `mktemp` intermediate file creation and `mv -f` pattern. If a disk write or pipeline error occurred mid-read, the previous implementation could create an empty or truncated baseline backup. The new implementation guarantees atomic write and halts with `die()` on failure.
 - **Backward-Compatible Comment Stripping**:
   - `disable_macos_updates.sh`: Added `/^# added by disable_macos_updates/ { next }` filter to the idempotent awk pipeline. Ensures legacy headers from older script versions without the explicit `# disable_macos_updates:managed` tag are completely purged upon re-execution.
+- **Domain Sinkhole Documentation Discrepancy**:
+  - `README.md` & `MANUAL.md`: Corrected documentation stating only 4 Apple CDN domains were sinkholed. Updated all tables and descriptions to reflect all 7 active sinkhole targets (`swscan.apple.com`, `swdownload.apple.com`, `swcdn.apple.com`, `updates-http.cdn-apple.com`, `updates.cdn-apple.com`, `xp.apple.com`, `gdmf.apple.com`).
+- **Logging Grammar Polish**:
+  - `disable_macos_updates.sh`: Corrected console log message from `Sinkholes:` to `Sinkholed:`.
 - **Author & Contact Header Normalization**:
   - Corrected author identification in both script headers and documentation to `Harry Dertin Sutisna Alsyundawy (@alsyundawy)`, replacing placeholder nickname entries.
 - **Markdownlint Standalone Configuration**:
   - Replaced unresolvable `extends` dependencies with self-contained root configurations in `.markdownlint.json` and `.markdownlint.yaml`, eliminating VS Code extension crash warnings.
 
-### Added
-
-- **Standardized Author & Contact Metadata Header**:
-  - Official script identification header in both scripts containing Script Name, Version (1.2.0), Created Date (2026-09-14), Last Updated (2026-09-22), Author (`Harry Dertin Sutisna Alsyundawy (@alsyundawy)`), Email (`alsyundawy@gmail.com`), Website (`https://www.alsyundawy.com`), GitHub (`https://github.com/alsyundawy`), Twitter / X (`https://x.com/alsyundawy`), Organization (`WWW.ALSYUNDAWY.NET`), and Location (`DKI Jakarta, Indonesia`).
-- **Multi-OS & Apple Silicon Architecture Matrix**:
-  - Comprehensive verification and documentation across macOS Monterey (12), Ventura (13), Sonoma (14), Sequoia (15), Tahoe (26), and Golden Gate (27).
-  - Explicit hardware coverage across all authentic Apple Silicon processor generations (M1, M2, M3, M4, M5, M6 — Base, Pro, Max, Ultra tiers), documenting Intel x86_64 deprecation after macOS 26 Tahoe.
-- **Operations Manual & Architecture Guidelines**:
-  - Expanded `MANUAL.md` with complete operational runbooks, pre-flight checklists, and fleet management guides for Jamf Pro, Munki, Kandji, Mosyle, and Ansible.
-  - Expanded `DOCNOTE.md` with 6 formal Architectural Decision Records (ADRs), low-level Darwin invariants, and BSD awk regex specifications.
-
 ### Updated
 
-- `DOCNOTE` in both scripts expanded with entries 7–10 (restore) and 7–12 (disable) to formally document all v1.2.0 architectural enhancements.
-- Header Security sections now document `$TMPDIR` sandbox compliance.
+- `DOCNOTE` in both scripts expanded with entries 7–11 (restore) and 7–13 (disable) to formally document all v1.2.0 architectural enhancements.
+- Header Security sections now document `$TMPDIR` sandbox compliance and transparent `sudo` auto-elevation.
 
 ---
 
