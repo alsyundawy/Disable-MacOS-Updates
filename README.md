@@ -304,8 +304,18 @@ Contributions are welcome:
 
 If these scripts are helpful for your setup, you can support development here:
 
-- **PayPal**: [https://www.paypal.me/alsyundawy](https://www.paypal.me/alsyundawy)
-- **QRIS (Indonesia)**: Supported across all Indonesian digital banking and e-wallet apps (GoPay, OVO, Dana, LinkAja, BCA, Mandiri).
+- **PayPal**: [`https://www.paypal.me/alsyundawy`](https://www.paypal.me/alsyundawy)
+
+### 🇮🇩 QRIS (Quick Response Code Indonesian Standard)
+
+Scan the QRIS barcode below using any Indonesian mobile banking app (BCA, Mandiri, BRI, BNI, BSI, CIMB Niaga, Permata) or e-wallet (GoPay, OVO, DANA, LinkAja, ShopeePay):
+
+![QRIS Donation Barcode - ALSYUNDAWY](https://github.com/user-attachments/assets/a0126f28-6dde-43da-ba14-d7c9a27de0df)
+
+- **Merchant / Account Name**: **ALSYUNDAWY IT SOLUTION**
+- **NMID**: **`ID1020021153676`**
+- **Direct Barcode Asset Link**: [`https://github.com/user-attachments/assets/a0126f28-6dde-43da-ba14-d7c9a27de0df`](https://github.com/user-attachments/assets/a0126f28-6dde-43da-ba14-d7c9a27de0df)
+- **WhatsApp Confirmation**: [`+62 856-8515-212`](https://wa.me/628568515212)
 
 ---
 
