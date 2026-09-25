@@ -7,9 +7,9 @@ IFS=$'\n\t'
 
 # ==============================================================================
 # Script Name   : restore_macos_updates.sh
-# Version       : 1.2.0
+# Version       : 1.3.0
 # Created Date  : 2026-09-14
-# Last Updated  : 2026-09-22
+# Last Updated  : 2026-09-26
 # Author        : Harry Dertin Sutisna Alsyundawy (@alsyundawy)
 # Email         : alsyundawy@gmail.com
 # Website       : https://www.alsyundawy.com
@@ -51,6 +51,7 @@ IFS=$'\n\t'
 #     - mktemp uses ${TMPDIR:-/tmp} to respect macOS per-session secure temp dir.
 #     - Restrictive permissions (0600 root:wheel) on pre-restore hosts backup.
 #     - Safe grep count calculation and process substitution avoiding pipefail aborts.
+#     - die() resets ERR trap on entry to prevent re-entrant error handling.
 #
 # Minimum macOS:  12 Monterey (tested); compatible with 10.15+ through 15+ (Sequoia), 26+ (Tahoe), and 27+ (Golden Gate)
 # Bash version:   3.2.57+ (native macOS)
@@ -95,10 +96,33 @@ IFS=$'\n\t'
 #     Scripts automatically detect non-root execution (EUID != 0) when run from a
 #     local file on disk and re-execute via exec sudo -- bash "${BASH_SOURCE[0]}" "$@",
 #     prompting for the sudo password interactively without needing sudo in command.
+# 12. Dead-Code Removal & Comment Accuracy (v1.3.0):
+#     Removed the no-op awk END block "END { if (NR > 0) printf "" }" from the
+#     blank-line normalizer pipeline. printf "" emits zero bytes and has no effect.
+#     The comment "clean duplicate blank lines" was corrected: the awk logic preserves
+#     all intermediate blank line counts and strips only trailing blank lines at EOF.
+# 13. Defensive die() ERR-Trap Reset (v1.3.0):
+#     die() now executes "trap - ERR" as its first statement, clearing the ERR trap
+#     before any further output or exit logic runs. This prevents theoretical re-entrant
+#     ERR trap firing if a future edge case causes a command inside die() to fail.
+#     Defense-in-depth; no functional change under normal operation.
+# 14. POSIX-Compliant head Flag (v1.3.0):
+#     softwareupdate --list output is now truncated with "head -n 20" (POSIX 1003.1)
+#     instead of the legacy "head -20" shorthand. macOS accepts both; -n N is canonical.
 #
 # ==============================================================================
 # CHANGELOG
 # ==============================================================================
+# v1.3.0 (2026-09-26)
+#   - FIXED: Removed dead-code awk END block "END { if (NR > 0) printf "" }" from the
+#            blank-line normalizer awk pass; printf "" is a no-op with zero effect.
+#   - FIXED: Corrected misleading comment "clean duplicate blank lines" — the awk logic
+#            preserves intermediate blank lines as-is and strips trailing blanks at EOF only.
+#   - FIXED: die() now resets ERR trap ("trap - ERR") as first statement, preventing
+#            potential re-entrant ERR trap loops on edge cases (defense-in-depth).
+#   - FIXED: head -20 updated to canonical POSIX form head -n 20 (softwareupdate step).
+#   - UPDATED: Last Updated date to 2026-09-26; version bumped to 1.3.0.
+#   - UPDATED: DOCNOTE entries 12–14 added for all v1.3.0 changes.
 # v1.2.0 (2026-09-22)
 #   - ADDED: Transparent sudo auto-elevation with interactive password prompt
 #            when executed locally without root privileges (no need to type sudo).
@@ -125,7 +149,7 @@ IFS=$'\n\t'
 #   - Initial implementation of macOS update restorer script.
 # ==============================================================================
 
-readonly SCRIPT_VERSION="1.2.0"
+readonly SCRIPT_VERSION="1.3.0"
 readonly SCRIPT_NAME="restore_macos_updates"
 
 # Must match the tag used by disable_macos_updates.sh
@@ -173,6 +197,9 @@ fi
 # ==============================================================================
 
 die() {
+	# Reset ERR trap immediately to prevent re-entrant error handling if any
+	# subsequent statement inside die() itself triggers a non-zero exit.
+	trap - ERR
 	printf "\n%s %s\n\n" "${C_RED}${C_BOLD}✖ ERROR:${C_RESET}" "${C_RED}$*${C_RESET}" >&2
 	exit 1
 }
@@ -301,7 +328,8 @@ else
 	chmod 644 "${TMP_HOSTS}"
 	chown root:wheel "${TMP_HOSTS}" 2>/dev/null || true
 
-	# Strip all managed sinkhole lines and header comment blocks cleanly in single pipeline
+	# Strip all managed sinkhole lines and header comment blocks cleanly in single pipeline;
+	# preserve intermediate blank lines as-is and strip trailing blank lines at EOF.
 	# NOTE: /^# ={20,}/ uses correct awk ERE syntax (no backslashes before quantifier braces)
 	awk -v tag="${HOSTS_TAG}" '
         index($0, tag) { next }
@@ -314,7 +342,6 @@ else
     ' /etc/hosts | awk '
         /^[[:space:]]*$/ { blank++; next }
         { for(i=0; i<blank; i++) print ""; blank=0; print }
-        END { if (NR > 0) printf "" }
     ' >"${TMP_HOSTS}"
 
 	# Ensure permissions before atomic move
@@ -391,7 +418,7 @@ ok "DNS cache flushed."
 step "5/5  Triggering software update availability check..."
 
 info "Running: softwareupdate --list  (this may take a moment...)"
-softwareupdate --list 2>&1 | head -20 || true
+softwareupdate --list 2>&1 | head -n 20 || true
 
 # ==============================================================================
 # VERIFICATION SUMMARY

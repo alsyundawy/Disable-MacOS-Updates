@@ -7,9 +7,9 @@ IFS=$'\n\t'
 
 # ==============================================================================
 # Script Name   : disable_macos_updates.sh
-# Version       : 1.2.0
+# Version       : 1.3.0
 # Created Date  : 2026-09-14
-# Last Updated  : 2026-09-22
+# Last Updated  : 2026-09-26
 # Author        : Harry Dertin Sutisna Alsyundawy (@alsyundawy)
 # Email         : alsyundawy@gmail.com
 # Website       : https://www.alsyundawy.com
@@ -58,6 +58,7 @@ IFS=$'\n\t'
 #     - All file operations use -- to prevent argument injection.
 #     - Restrictive permissions (0600 root:wheel) on all backups in /var/db.
 #     - Safe process substitution avoiding pipeline pipefail traps.
+#     - die() resets ERR trap on entry to prevent re-entrant error handling.
 #
 # Minimum macOS:  12 Monterey (tested); compatible with 10.15+ through 15+ (Sequoia), 26+ (Tahoe), and 27+ (Golden Gate)
 # Bash version:   3.2.57+ (native macOS)
@@ -111,10 +112,32 @@ IFS=$'\n\t'
 #     Scripts automatically detect non-root execution (EUID != 0) when run from a
 #     local file on disk and re-execute via exec sudo -- bash "${BASH_SOURCE[0]}" "$@",
 #     prompting for the sudo password interactively without needing sudo in command.
+# 14. Dead-Code Removal & Comment Accuracy (v1.3.0):
+#     Removed the no-op awk END block "END { if (NR > 0) printf "" }" from the
+#     blank-line normalizer pipeline. printf "" emits zero bytes and has no effect.
+#     The comment "clean duplicate blank lines" was corrected: the awk logic preserves
+#     all intermediate blank line counts and strips only trailing blank lines at EOF.
+# 15. Defensive die() ERR-Trap Reset (v1.3.0):
+#     die() now executes "trap - ERR" as its first statement, clearing the ERR trap
+#     before any further output or exit logic runs. This prevents theoretical re-entrant
+#     ERR trap firing if a future edge case causes a command inside die() to fail.
+#     Defense-in-depth; no functional change under normal operation.
+# 16. POSIX-Compliant head Flag (v1.3.0):
+#     Confirmed all head invocations use "head -n N" (POSIX 1003.1). macOS accepts
+#     both -N and -n N; -n N is the canonical standard form.
 #
 # ==============================================================================
 # CHANGELOG
 # ==============================================================================
+# v1.3.0 (2026-09-26)
+#   - FIXED: Removed dead-code awk END block "END { if (NR > 0) printf "" }" from the
+#            blank-line normalizer awk pass; printf "" is a no-op with zero effect.
+#   - FIXED: Corrected misleading comment "clean duplicate blank lines" — the awk logic
+#            preserves intermediate blank lines as-is and strips trailing blanks at EOF only.
+#   - FIXED: die() now resets ERR trap ("trap - ERR") as first statement, preventing
+#            potential re-entrant ERR trap loops on edge cases (defense-in-depth).
+#   - UPDATED: Last Updated date to 2026-09-26; version bumped to 1.3.0.
+#   - UPDATED: DOCNOTE entries 14–16 added for all v1.3.0 changes.
 # v1.2.0 (2026-09-22)
 #   - ADDED: Transparent sudo auto-elevation with interactive password prompt
 #            when executed locally without root privileges (no need to type sudo).
@@ -150,7 +173,7 @@ IFS=$'\n\t'
 #   - Initial implementation of macOS update disabler script.
 # ==============================================================================
 
-readonly SCRIPT_VERSION="1.2.0"
+readonly SCRIPT_VERSION="1.3.0"
 readonly SCRIPT_NAME="disable_macos_updates"
 
 # Unique tag injected into /etc/hosts so restore can cleanly remove entries
@@ -211,6 +234,9 @@ fi
 # ==============================================================================
 
 die() {
+	# Reset ERR trap immediately to prevent re-entrant error handling if any
+	# subsequent statement inside die() itself triggers a non-zero exit.
+	trap - ERR
 	printf "\n%s %s\n\n" "${C_RED}${C_BOLD}✖ ERROR:${C_RESET}" "${C_RED}$*${C_RESET}" >&2
 	exit 1
 }
@@ -442,7 +468,8 @@ TMP_HOSTS="$(mktemp "${TMPDIR:-/tmp}/hosts.XXXXXXXX")"
 chmod 644 "${TMP_HOSTS}"
 chown root:wheel "${TMP_HOSTS}" 2>/dev/null || true
 
-# Strip any previously managed lines and clean duplicate blank lines
+# Strip any previously managed lines; preserve intermediate blank lines as-is
+# and strip any trailing blank lines at EOF (accumulated blank count at END is discarded).
 # NOTE: /^# ={20,}/ uses correct awk ERE (no backslashes before quantifier braces)
 awk -v tag="${HOSTS_TAG}" '
     index($0, tag) { next }
@@ -455,7 +482,6 @@ awk -v tag="${HOSTS_TAG}" '
 ' /etc/hosts | awk '
     /^[[:space:]]*$/ { blank++; next }
     { for(i=0; i<blank; i++) print ""; blank=0; print }
-    END { if (NR > 0) printf "" }
 ' >"${TMP_HOSTS}"
 
 # Append sinkhole header + managed entries (all tagged with HOSTS_TAG for clean removal)

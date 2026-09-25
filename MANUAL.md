@@ -1,6 +1,14 @@
+<!-- markdownlint-disable-file MD033 -->
+
 # Operations & Administration Manual
 
-**Disable-MacOS-Updates Suite — v1.2.0**<br>
+<p align="center">
+  <a href="https://github.com/alsyundawy/Disable-MacOS-Updates">
+    <img src="assets/disable-macos-updates-banner.jpg" alt="Disable macOS Updates Manual Banner" width="100%">
+  </a>
+</p>
+
+**Disable-MacOS-Updates Suite — v1.3.0**<br>
 _Operations Manual for macOS Automatic Software Update Control_
 
 ---
@@ -30,6 +38,7 @@ _Operations Manual for macOS Automatic Software Update Control_
   - [6.4 Ansible Playbook with Handlers](#64-ansible-playbook-with-handlers)
 - [7. Troubleshooting & Diagnostics](#7-troubleshooting--diagnostics)
 - [8. Frequently Asked Questions (FAQ)](#8-frequently-asked-questions-faq)
+- [9. Maintainer & Contact](#9-maintainer--contact)
 
 ---
 
@@ -201,15 +210,17 @@ The scripts manipulate system-level preference plists located in `/Library/Prefe
 
 ### 4.2 Apple Update CDN Sinkholing
 
-Even when preference flags are disabled, background helper processes may attempt to contact Apple catalog servers. The suite points these domains to localhost (`127.0.0.1`):
+Even when preference flags are disabled, background helper processes may attempt to contact Apple catalog servers. The suite routes these domains to localhost (`127.0.0.1`):
 
-- `swscan.apple.com`: Software Update Catalog index and manifest service.
-- `swdownload.apple.com`: Package download CDN.
-- `swcdn.apple.com`: Asset and delta update distribution server.
-- `updates-http.cdn-apple.com`: HTTP/HTTPS content delivery endpoint.
-- `updates.cdn-apple.com`: HTTPS content delivery endpoint.
-- `xp.apple.com`: Diagnostic reporting and update telemetry endpoint.
-- `gdmf.apple.com`: Global Device Management Framework / OS catalog dispatcher.
+| Apple CDN Domain              | Protocol & Ports | Service Role & Payload Type                                                              | Loopback Effect (`127.0.0.1`)                                      |
+| :---------------------------- | :--------------- | :--------------------------------------------------------------------------------------- | :----------------------------------------------------------------- |
+| `swscan.apple.com`            | HTTPS (443)      | Core Software Update XML Catalog, index manifest, and package metadata queries.          | Instant `ECONNREFUSED`; catalog check aborted immediately.         |
+| `swdownload.apple.com`        | HTTP / HTTPS     | Binary payload delivery CDN for macOS base system update PKGs.                           | Instant `ECONNREFUSED`; package downloads fail before initiation.  |
+| `swcdn.apple.com`             | HTTP / HTTPS     | Delta update payloads, firmware updates, and distribution scripts.                       | Instant `ECONNREFUSED`; firmware update checks fail immediately.   |
+| `updates-http.cdn-apple.com`  | HTTP (80)        | Legacy and CDN fallback transport for unencrypted package chunks.                        | Instant `ECONNREFUSED`; no unencrypted CDN fallback.               |
+| `updates.cdn-apple.com`       | HTTPS (443)      | Modern HTTPS content delivery network for full OS and Delta packages.                    | Instant `ECONNREFUSED`; CDN downloads terminate locally.           |
+| `xp.apple.com`                | HTTPS (443)      | Telemetry, crash analytics, and diagnostic reporting for update sessions.                | Instant `ECONNREFUSED`; silences update telemetry reporting.       |
+| `gdmf.apple.com`              | HTTPS (443)      | Global Device Management Framework OS catalog endpoint and seed dispatcher.              | Instant `ECONNREFUSED`; blocks seed catalog discovery.             |
 
 ---
 
@@ -226,14 +237,16 @@ Even when preference flags are disabled, background helper processes may attempt
 
 ### 4.4 Background Launch Daemons Topology
 
-The suite addresses the following macOS system services:
+The suite directly addresses and manages all background update services via modern `launchctl` target domains:
 
-- `com.apple.softwareupdated`: Primary system update coordination daemon.
-- `com.apple.mobile.softwareupdated`: Mobile device and accessory update daemon.
-- `com.apple.InstallAssistantService`: Installer coordination helper.
-- `com.apple.storedownloadd`: App Store and system asset downloader.
-- `com.apple.storekitagentd`: StoreKit transaction helper.
-- `com.apple.commerce`: Mac App Store commerce daemon.
+| Launch Daemon / Agent Label         | Service Plist Definition Path                                    | Disabled State   | Restored State  | Operational Functionality                                  |
+| :---------------------------------- | :--------------------------------------------------------------- | :--------------- | :-------------- | :--------------------------------------------------------- |
+| `com.apple.softwareupdated`         | `/System/Library/LaunchDaemons/com.apple.softwareupdated.plist`  | `bootout`        | `kickstart -k`  | Primary OS update orchestrator, indexer, and downloader.   |
+| `com.apple.mobile.softwareupdated`  | `/System/Library/LaunchDaemons/com.apple.mobile.softwareupdated` | `bootout`        | `kickstart -k`  | Mobile device, accessory, and universal asset updater.     |
+| `com.apple.InstallAssistantService` | `/System/Library/LaunchDaemons/com.apple.InstallAssistant*`      | `bootout`        | `kickstart -k`  | Package integrity validation and pre-installation helper.  |
+| `com.apple.storedownloadd`          | `/System/Library/LaunchDaemons/com.apple.storedownloadd.plist`   | `bootout`        | `kickstart -k`  | App Store and system asset background download manager.    |
+| `com.apple.storekitagentd`          | `/System/Library/LaunchDaemons/com.apple.storekitagentd.plist`   | `bootout`        | `kickstart -k`  | StoreKit transaction daemon and background helper.         |
+| `com.apple.commerce`                | `/System/Library/LaunchDaemons/com.apple.commerce.plist`         | `bootout`        | `kickstart -k`  | Mac App Store commerce daemon and auto-update scheduler.   |
 
 ---
 
@@ -412,3 +425,21 @@ No. You can continue to install and update Xcode manually via the App Store or A
 ### How do I verify that updates are truly blocked?
 
 Run `dscacheutil -q host -a name swscan.apple.com`. If it returns `127.0.0.1`, network-level catalog requests are successfully sinkholed.
+
+---
+
+## 9. Maintainer & Contact
+
+<p align="center">
+  <a href="https://www.alsyundawy.com">
+    <img src="assets/alsyundawy-banner.png" alt="Alsyundawy IT Solution Banner" width="100%">
+  </a>
+</p>
+
+### Harry Dertin Sutisna Alsyundawy (@alsyundawy)
+
+- 🌐 Website: [https://www.alsyundawy.com](https://www.alsyundawy.com)
+- 💻 GitHub: [@alsyundawy](https://github.com/alsyundawy)
+- 🐦 Twitter / X: [@alsyundawy](https://x.com/alsyundawy)
+- 🏢 Organization: [WWW.ALSYUNDAWY.NET](https://www.alsyundawy.net)
+- 📍 Location: DKI Jakarta, Indonesia

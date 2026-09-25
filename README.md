@@ -1,12 +1,18 @@
 <!-- markdownlint-disable-file MD033 MD041 -->
 
+<p align="center">
+  <a href="https://github.com/alsyundawy/Disable-MacOS-Updates">
+    <img src="assets/disable-macos-updates-banner.jpg" alt="Disable macOS Updates Hardened Control Suite Banner" width="100%">
+  </a>
+</p>
+
 <div align="center">
 
 # 🔒 Disable-MacOS-Updates
 
 ## Control macOS Automatic Software Updates with Clean Reversibility
 
-[![Latest Release](https://img.shields.io/badge/Release-v1.2.0-0284c7?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.2.0)
+[![Latest Release](https://img.shields.io/badge/Release-v1.3.0-0284c7?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.3.0)
 [![Bash 3.2+](https://img.shields.io/badge/Shell-Bash%203.2%2B%20%7C%20POSIX-4eaa25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
 [![macOS Compatibility](https://img.shields.io/badge/macOS-12%20Monterey%20%E2%80%94%2027%20Golden%20Gate-000000?style=for-the-badge&logo=apple&logoColor=white)](https://apple.com/macos)
 [![Architecture](<https://img.shields.io/badge/Arch-Apple%20Silicon%20(M1--M6)%20%26%20Intel-f59e0b?style=for-the-badge&logo=apple&logoColor=white>)](https://apple.com)
@@ -19,8 +25,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.2.0">
-    <img src="https://img.shields.io/badge/🚀_Download_Latest_Release-v1.2.0-238636?style=for-the-badge&logo=github&logoColor=white" alt="Download Latest Release v1.2.0">
+  <a href="https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.3.0">
+    <img src="https://img.shields.io/badge/🚀_Download_Latest_Release-v1.3.0-238636?style=for-the-badge&logo=github&logoColor=white" alt="Download Latest Release v1.3.0">
   </a>
   <a href="https://github.com/alsyundawy/Disable-MacOS-Updates/releases">
     <img src="https://img.shields.io/badge/📦_All_Releases-View-0284c7?style=for-the-badge&logo=github&logoColor=white" alt="All Releases">
@@ -31,7 +37,7 @@
 > **[`HARRY DERTIN SUTISNA ALSYUNDAWY (@alsyundawy)`](https://github.com/alsyundawy)** —<br>
 > Built for audio/video workstations (DAW), render systems, and machines where automatic updates cause disruptions.
 >
-> 📦 **[`GitHub Releases (v1.2.0)`](https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.2.0)** &nbsp;|&nbsp;
+> 📦 **[`GitHub Releases (v1.3.0)`](https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.3.0)** &nbsp;|&nbsp;
 > 📖 **[`Operations Manual`](MANUAL.md)** &nbsp;|&nbsp;
 > 🏛️ **[`Architecture & Engineering Notes`](DOCNOTE.md)** &nbsp;|&nbsp;
 > 📜 **[`Full Changelog`](CHANGELOG.md)** &nbsp;|&nbsp;
@@ -44,6 +50,7 @@
 
 ## 🧭 Navigation
 
+- [What's New in v1.3.0](#-whats-new-in-v130-highlights--core-upgrades)
 - [Overview](#overview)
 - [Why Use These Scripts?](#why-use-these-scripts)
 - [Key Features](#key-features)
@@ -60,6 +67,26 @@
 - [Maintainer & Contact](#maintainer--contact)
 - [Support & Donation](#support--donation)
 - [License](#license)
+
+---
+
+## 🚀 What's New in v1.3.0 (Highlights & Core Upgrades)
+
+The **v1.3.0** release delivers defensive error handling hardening, POSIX standardizations, stream processing optimizations, and a brand-new official visual identity suite:
+
+1. 🎨 **Official Cyber-Hardened Banner & Flyer Asset Suite**:
+   - High-resolution (1376x768, 16:9) cyber security banner flyer ([`assets/disable-macos-updates-banner.jpg`](assets/disable-macos-updates-banner.jpg)) featuring glowing neon circuit aesthetics, symmetrical hexagonal capability taxonomy, central Apple padlock shield, and full maintainer branding.
+   - Official Alsyundawy IT Solution maintainer banner ([`assets/alsyundawy-banner.png`](assets/alsyundawy-banner.png)) integrated across documentation.
+2. 🛡️ **Defensive Error Trap De-escalation (`trap - ERR`)**:
+   - `die()` function immediately resets the `ERR` trap (`trap - ERR`) upon entry. This guarantees terminal error messages and exit code `1` are delivered cleanly without theoretical re-entrant trap firing loops on fatal edge cases.
+3. ⚡ **AWK Stream Sanitization & Dead-Code Elimination**:
+   - Removed obsolete `END { if (NR > 0) printf "" }` no-op blocks from `/etc/hosts` normalizer pipelines in both scripts.
+   - Clarified inline state-machine documentation: intermediate multi-line spacing is preserved verbatim while trailing blank lines at EOF are pruned to prevent file expansion across repeated runs.
+4. 📜 **POSIX-1003.1 Utility Invocation Invariants**:
+   - Replaced legacy `head -20` shorthand with canonical POSIX standard `head -n 20` during post-restoration software update verification checks.
+5. 🏛️ **Architecture Decision Records (ADRs 008–011)**:
+   - Expanded [`DOCNOTE.md`](DOCNOTE.md) with 4 new formal ADRs detailing trap de-escalation, stream normalization invariants, POSIX utility standards, and visual architecture design.
+   - Added low-level TCP loopback rejection (`ECONNREFUSED` on port 443/80) behavior and zero-overhead runtime telemetry tables.
 
 ---
 
@@ -115,6 +142,8 @@ While macOS System Settings provides toggles, background daemon tasks and catalo
 | **Sandbox `$TMPDIR` Compliance** | Uses `mktemp "${TMPDIR:-/tmp}/hosts.XXXXXXXX"` instead of global `/tmp`.           | Complies with macOS sandbox boundaries and avoids symlink race hazards.         |
 | **Daemon Management**            | Unloads/reloads daemons via modern `launchctl bootout` / `bootstrap`.              | Prevents active memory daemons from initiating background update tasks.         |
 | **Baseline Backups**             | Saves copies in `/var/db/` with `0600 root:wheel` permissions.                     | Provides disaster recovery back to the pre-script state.                        |
+| **Zero Overhead Passivity**      | Zero background daemons, 0 resident processes, 0 polling loops.                    | 0.00% CPU overhead, 0 KB RAM footprint, and zero battery drain.                 |
+| **Instant TCP Rejection**        | Loopback `127.0.0.1` sinkhole responds with immediate TCP `RST` (<1ms).            | Eliminates 30-60s network connection timeouts during background catalog checks. |
 
 ---
 
@@ -316,6 +345,9 @@ Disable-MacOS-Updates/
 ├── LICENSE                    # MIT License
 ├── MANUAL.md                  # Operations & Administration Manual
 ├── README.md                  # Project overview, architecture, and quick start guide
+├── assets/                    # Repository banners, media, and visual assets
+│   ├── alsyundawy-banner.png  # Alsyundawy IT Solution maintainer banner
+│   └── disable-macos-updates-banner.jpg # Production flyer & banner
 ├── disable_macos_updates.sh   # Production disabler script
 └── restore_macos_updates.sh   # Production restoration script
 ```
@@ -334,6 +366,12 @@ Contributions are welcome:
 ---
 
 ## Maintainer & Contact
+
+<p align="center">
+  <a href="https://www.alsyundawy.com">
+    <img src="assets/alsyundawy-banner.png" alt="Alsyundawy IT Solution Banner" width="100%">
+  </a>
+</p>
 
 ### Harry Dertin Sutisna Alsyundawy (@alsyundawy)
 
