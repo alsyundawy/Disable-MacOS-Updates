@@ -6,19 +6,19 @@
   </a>
 </p>
 
-<div align="center">
+<h1 align="center">🔒 Disable-MacOS-Updates</h1>
 
-# 🔒 Disable-MacOS-Updates
+<h3 align="center">Control macOS Automatic Software Updates with Clean Reversibility</h3>
 
-## Control macOS Automatic Software Updates with Clean Reversibility
-
-[![Latest Release](https://img.shields.io/badge/Release-v1.3.0-0284c7?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.3.0)
-[![Bash 3.2+](https://img.shields.io/badge/Shell-Bash%203.2%2B%20%7C%20POSIX-4eaa25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
-[![macOS Compatibility](https://img.shields.io/badge/macOS-12%20Monterey%20%E2%80%94%2027%20Golden%20Gate-000000?style=for-the-badge&logo=apple&logoColor=white)](https://apple.com/macos)
-[![Architecture](<https://img.shields.io/badge/Arch-Apple%20Silicon%20(M1--M6)%20%26%20Intel-f59e0b?style=for-the-badge&logo=apple&logoColor=white>)](https://apple.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![ShellCheck](<https://img.shields.io/badge/ShellCheck-Passing%20(0%20warnings)-success?style=for-the-badge&logo=shellcheck&logoColor=white>)](https://www.shellcheck.net/)
-[![Security: Hardened](https://img.shields.io/badge/Security-Hardened-red?style=for-the-badge&logo=securityscorecard&logoColor=white)](DOCNOTE.md)
+<p align="center">
+  <a href="https://github.com/alsyundawy/Disable-MacOS-Updates/releases/tag/v1.3.0"><img src="https://img.shields.io/badge/Release-v1.3.0-0284c7?style=for-the-badge&logo=apple&logoColor=white" alt="Latest Release"></a>
+  <a href="https://www.gnu.org/software/bash/"><img src="https://img.shields.io/badge/Shell-Bash%203.2%2B%20%7C%20POSIX-4eaa25?style=for-the-badge&logo=gnu-bash&logoColor=white" alt="Bash 3.2+"></a>
+  <a href="https://apple.com/macos"><img src="https://img.shields.io/badge/macOS-12%20Monterey%20%E2%80%94%2027%20Golden%20Gate-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS Compatibility"></a>
+  <a href="https://apple.com"><img src="https://img.shields.io/badge/Arch-Apple%20Silicon%20(M1--M6)%20%26%20Intel-f59e0b?style=for-the-badge&logo=apple&logoColor=white" alt="Architecture"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License: MIT"></a>
+  <a href="https://www.shellcheck.net/"><img src="https://img.shields.io/badge/ShellCheck-Passing%20(0%20warnings)-success?style=for-the-badge&logo=shellcheck&logoColor=white" alt="ShellCheck"></a>
+  <a href="DOCNOTE.md"><img src="https://img.shields.io/badge/Security-Hardened-red?style=for-the-badge&logo=securityscorecard&logoColor=white" alt="Security: Hardened"></a>
+</p>
 
 <p align="center">
   A pair of Bash scripts to disable macOS automatic software updates and symmetrically restore them when needed.
@@ -43,8 +43,6 @@
 > 📜 **[`Full Changelog`](CHANGELOG.md)** &nbsp;|&nbsp;
 > 💖 **[`Support via PayPal`](https://www.paypal.me/alsyundawy)** &nbsp;|&nbsp;
 > 🇮🇩 **[`QRIS Donation`](#support--donation)**
-
-</div>
 
 ---
 

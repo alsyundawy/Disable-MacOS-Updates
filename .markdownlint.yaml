@@ -15,6 +15,10 @@ MD033:
     - span
     - img
     - br
+    - a
+    - h1
+    - h2
+    - h3
 
 # Allow files to begin with HTML badge wrapper blocks (e.g. <div align="center">)
 MD041: false
